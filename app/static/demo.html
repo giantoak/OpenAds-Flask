@@ -1,0 +1,191 @@
+<!doctype html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <META http-equiv="Cache-Control" Content="no-cache">
+	<meta http-equiv="Expires" content="0">
+
+	<script src="scripts/jquery.js"></script>
+	<script src="scripts/lib/jquery-ui-1.10.3.custom.min.js"></script>
+
+	<link rel="stylesheet" type="text/css" href="theme/custom-theme/jquery-ui-1.10.3.custom.css"/>
+	
+    <title>DARPA Counter Human Trafficking Demo</title>
+    <style>
+
+.standaloneToolstrip {
+	height: 31px;
+	padding-left:5px;
+	padding-top:7px;
+	background-repeat: repeat-x;
+	background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAA8CAIAAADDpPyuAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAACxJREFUeNpi/P//PwMDA8vz58+BFBMDGOCjWBgZGUnioVJY5YgwbCRTAAEGAN9cBl7Tr+qqAAAAAElFTkSuQmCC);
+	overflow: hidden;
+	white-space:nowrap;
+	font-family: Arial,Verdana,tahoma,serif;
+	color: #454545;
+	font-size: 18px;
+	border: 1px solid #A7ABB4;
+	background-color: #FFFFFF;
+}
+
+.standaloneBody {
+	margin:0px;
+	font-family: Arial,Verdana,tahoma,serif;
+	font-size: 15px;
+}
+
+.standaloneButtons {
+	float:left;
+	margin-top:-7px;
+	margin-left:-5px;
+}
+
+.standaloneLogout {
+	position:absolute;
+	right:10px;
+	top:8px;
+	cursor:pointer;
+}
+
+    </style>
+
+  </head>
+  <body class="standaloneBody">
+	<div class="standaloneToolstrip" >DARPA Counter Human Trafficking Demo</div>
+	<script>
+		var fullUrl = document.location.href;
+		var baseUrl = fullUrl.match('^.+?[^/:](?=[?/]|$)') + '/';
+		var soteraBaseUrl = 'http://localhost:7080/';
+		var CMUBaseUrl = 'http://localhost:4896/';
+		var ISTBaseUrl = 'http://localhost/';
+		var hyperionBaseUrl = 'http://localhost:81/'
+                var jplBaseUrl = 'http://localhost:5000/'
+
+		if (fullUrl.indexOf('localhost')<0) {
+			soteraBaseUrl = 'http://memexdemo.istresearch.com:7080/';
+			CMUBaseUrl = 'http://memexdemo.istresearch.com:4896';
+			ISTBaseUrl = 'https://roxy.istresearch.com/';
+		}
+		var addButton = function(container, url, title) {
+			var buttonDiv = $('<div/>');
+			buttonDiv[0].url = url;
+			buttonDiv.text(title).button({ text:true })
+			.css({position:'relative','margin-top':'2px',width:'100%',clear:'both','text-align':'left', 'font-size':'16px',
+				'background-image':'url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAA8CAIAAADDpPyuAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAACxJREFUeNpi/P//PwMDA8vz58+BFBMDGOCjWBgZGUnioVJY5YgwbCRTAAEGAN9cBl7Tr+qqAAAAAElFTkSuQmCC)'
+				})
+			.click(function(event) {
+				window.open(this.url);
+			});
+			container.append(buttonDiv);
+		}
+
+		var mainToolDiv = $('<div/>');
+		document.body.appendChild(mainToolDiv[0]);
+		mainToolDiv.css({position:'absolute', width:'250px', height:'400px'});
+                var mainScriptTitle = $('<div/>');
+                mainToolDiv.append(mainScriptTitle);
+                mainScriptTitle.text('Tool Overview Fall 2014');
+		addButton(mainToolDiv, baseUrl + 'videos/intro.mp4', 'Intro Video');
+                addButton(mainToolDiv, baseUrl + 'videos/segment1.mp4', 'Data Wake Video');
+		addButton(mainToolDiv, soteraBaseUrl + 'forensic/', 'Data Wake Forensic Tool');
+		addButton(mainToolDiv, CMUBaseUrl, 'CMUStatistics');
+		addButton(mainToolDiv, soteraBaseUrl + 'gqt_alpha/', 'Graph Query Tool');
+		addButton(mainToolDiv, soteraBaseUrl + 'domain-loader/', 'Domain Loader');
+		addButton(mainToolDiv, baseUrl + 'openads/', 'OpenAds Overview');
+		addButton(mainToolDiv, ISTBaseUrl + 'roxy/home/dashboard/', 'Scrape Dashboard');
+		addButton(mainToolDiv, ISTBaseUrl + 'roxy/ads/view/', 'Poprox');
+		addButton(mainToolDiv, hyperionBaseUrl, 'SourcePin');		
+		addButton(mainToolDiv, jplBaseUrl, 'Image Space');
+
+		var oldScriptDiv = $('<div/>');
+		document.body.appendChild(oldScriptDiv[0]);
+		oldScriptDiv.css({position:'absolute', left:'270px', width:'250px', height:'400px'});
+		var oldScriptTitle = $('<div/>');
+		oldScriptDiv.append(oldScriptTitle);
+		oldScriptTitle.text('Tool Overview Summer 2014');
+		addButton(oldScriptDiv, baseUrl + 'videos/intro.mp4', 'Intro Video');
+		addButton(oldScriptDiv, baseUrl + 'videos/segment1.mp4', 'Data Wake Video');
+		addButton(oldScriptDiv, soteraBaseUrl + 'forensic/', 'Data Wake Tool');
+		addButton(oldScriptDiv, ISTBaseUrl + 'roxy/home/dashboard/', 'Scrape Dashboard');
+		addButton(oldScriptDiv, CMUBaseUrl, 'CMUStatistics');
+		addButton(oldScriptDiv, baseUrl + 'openads/adsearch.html?tip=cherry11', 'Ad Search');
+		addButton(oldScriptDiv, baseUrl + 'openads/', 'OpenAds Overview');
+		addButton(oldScriptDiv, baseUrl + 'videos/oculusdemo_1.mp4', 'OpenAds Video 1');
+		addButton(oldScriptDiv, baseUrl + 'videos/oculusdemo_2.mp4', 'OpenAds Video 2');
+		addButton(oldScriptDiv, baseUrl + 'videos/segment2.mp4', 'Sotera Portion Video');
+		addButton(oldScriptDiv, baseUrl + 'videos/segment3.mp4', 'Multiple Datasource Video');
+		addButton(oldScriptDiv, ISTBaseUrl + 'roxy/ads/view/', 'Poprox');
+
+		var newScriptDiv = $('<div/>');
+		document.body.appendChild(newScriptDiv[0]);
+		newScriptDiv.css({position:'absolute', left:'540px', width:'500px', height:'400px'});
+		var newScriptTitle = $('<div/>');
+		newScriptDiv.append(newScriptTitle);
+		newScriptTitle.text('Oculus Video');
+		addButton(newScriptDiv, baseUrl + 'videos/oculussotera.mp4', 'OpenAds Plus WebGraph');
+		
+		var soteraClearDiv = $('<div/>');
+		newScriptDiv.append(soteraClearDiv);
+		soteraClearDiv.css({position:'absolute', top:'60px', width:'255px', height:'400px'});
+		var soteraClearTitle = $('<div/>');
+		soteraClearDiv.append(soteraClearTitle);
+		soteraClearTitle.text('Sotera Videos');
+		addButton(soteraClearDiv, baseUrl + 'videos/BrowseBasic.mp4', 'Basic Browse Path');
+		addButton(soteraClearDiv, baseUrl + 'videos/Autoquery.mp4', 'Autoquery');
+		addButton(soteraClearDiv, baseUrl + 'videos/cherryBrowsingLong.mp4', 'Long Browsing Version');
+		addButton(soteraClearDiv, baseUrl + 'videos/HighlightToSaveBrowsing.mp4', 'Highlight To Save');
+		addButton(soteraClearDiv, baseUrl + 'videos/ShortGQTSegment.mp4', 'Short GQT Segment');
+		addButton(soteraClearDiv, baseUrl + 'videos/ViewerBasicBrowsing.mp4', 'Viewer Basic');
+		addButton(soteraClearDiv, baseUrl + 'videos/ViewerBasicBrowsingEmail.mp4', 'Viewer Basic Email');
+		addButton(soteraClearDiv, baseUrl + 'videos/ViewerBasicBrowsingCollaboration.mp4', 'Viewer Basic Collaboration');
+		addButton(soteraClearDiv, baseUrl + 'videos/ViewerDataFlashlight.mp4', 'Viewer Data Flashlight');
+	    addButton(soteraClearDiv, baseUrl + 'videos/DatawakeLookahead.mp4', 'Datawake Lookahead');
+        addButton(soteraClearDiv, baseUrl + 'videos/domain_loading2.mp4', 'Datawake Domain Loading');
+	
+		var soteraBlurDiv = $('<div/>');
+		newScriptDiv.append(soteraBlurDiv);
+		soteraBlurDiv.css({position:'absolute', top:'60px', left:'260px', width:'240px', height:'400px'});
+		var soteraBlurTitle = $('<div/>');
+		soteraBlurDiv.append(soteraBlurTitle);
+		soteraBlurTitle.text('Blurred');
+		addButton(soteraBlurDiv, baseUrl + 'videos/BrowseBasicBlurred.wmv', 'Basic Browse Path');
+		addButton(soteraBlurDiv, baseUrl + 'videos/AutoqueryBlurred.wmv', 'Autoquery');
+		addButton(soteraBlurDiv, baseUrl + 'videos/cherryBrowsingLongBlurred.wmv', 'Long Browsing Version');
+		addButton(soteraBlurDiv, baseUrl + 'videos/HighlightToSaveBrowsingBlurred.wmv', 'Highlight To Save');
+		addButton(soteraBlurDiv, baseUrl + 'videos/ShortGQTSegmentBlurred.wmv', 'Short GQT Segment');
+		addButton(soteraBlurDiv, baseUrl + 'videos/ViewerBasicBrowsingBlurred.wmv', 'Viewer Basic');
+		var spacerDiv = $('<div/>');
+		spacerDiv.css({width:'100%',clear:'both',height:'68px'});
+		soteraBlurDiv.append(spacerDiv);
+		addButton(soteraBlurDiv, baseUrl + 'videos/ViewerDataFlashlightBlurred.wmv', 'Viewer Data Flashlight');
+
+		var rightScriptDiv = $('<div/>');
+		document.body.appendChild(rightScriptDiv[0]);
+		rightScriptDiv.css({position:'absolute', left:'1060px', width:'500px', height:'400px'});
+		var rightScriptTitle = $('<div/>');
+		rightScriptDiv.append(rightScriptTitle);
+		rightScriptTitle.text('Oculus Video');
+		addButton(rightScriptDiv, baseUrl + 'videos/OpenAdsImageSimilarity.mp4', 'OpenAds Image Similarity');
+
+        var hyperionClearDiv = $('<div/>');
+        rightScriptDiv.append(hyperionClearDiv);
+        hyperionClearDiv.css({position:'absolute', top:'60px', width:'255px', height:'400px'});
+        var hyperionClearTitle = $('<div/>');
+        hyperionClearDiv.append(hyperionClearTitle);
+        hyperionClearTitle.text('Hyperion Gray Videos');
+        addButton(hyperionClearDiv, baseUrl + 'videos/SourcePin_Memex_full.mp4', 'SourcePin Full');
+        addButton(hyperionClearDiv, baseUrl + 'videos/1SourcePin_Memex_summary.mp4', 'SourcePin Summary');
+        addButton(hyperionClearDiv, baseUrl + 'videos/2SourcePin_Memex_drilldown-pivot.mp4', 'SourcePin Drill Down');
+        addButton(hyperionClearDiv, baseUrl + 'videos/3SourcePin_Memex_newcrawl.mp4', 'SourcePin New Crawl');
+        addButton(hyperionClearDiv, baseUrl + 'videos/4SourcePin_Memex_darkweb.mp4', 'SourcePin Dark Web');
+	
+		var jplDiv = $('<div/>');
+		rightScriptDiv.append(jplDiv);
+		jplDiv.css({position:'absolute', top:'60px', left:'260px', width:'240px', height:'400px'});
+		var jplTitle = $('<div/>');
+		jplDiv.append(jplTitle);
+		jplTitle.text('JPL Videos');
+		addButton(jplDiv, baseUrl + 'videos/memex-jpl-screenflow.mp4', 'Image Space');
+	</script>
+  </body>
+</html>
