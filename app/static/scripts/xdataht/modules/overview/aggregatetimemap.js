@@ -387,7 +387,7 @@ define(['jquery', 'jquery-ui', '../util/rest', '../util/ui_util', '../util/kmean
 			fetchData: function() {
 				var that = this;
 				this.showLoadingDialog('Fetching overview data');
-				rest.get({{url_for('locationtime')}}, 'Get location ad volume time series', function(result) {
+				rest.get(baseUrl + 'rest/overview/locationtime', 'Get location ad volume time series', function(result) {
 		        	that.geoTimeData.length = 0;
 		        	for (var i=0; i<result.results.length; i++) {
 		        		that.geoTimeData.push(result.results[i]);

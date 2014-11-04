@@ -30,7 +30,7 @@
  */
 
 require.config({
-    "baseUrl": 'scripts',
+    "baseUrl": 'static/scripts',
     "paths": {
         "jquery-ui": 'lib/jquery-ui-1.10.3.custom.min',
         "jqui-datatables": 'lib/jquery.dataTables.min',

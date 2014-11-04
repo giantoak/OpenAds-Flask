@@ -14,10 +14,30 @@ def overview():
     serve overview page of openads
     """
     
-    return app.send_static_file('overview.html')
+    return render_template('overview.html')
+
+
+@app.route('/rest/overview/timeseries/')
+def time_series():
+    """
+    return time series data
+    """
+    q = db.session.execute('SELECT * FROM temporal ORDER BY day')
+
+    result = []
+    for row in q:
+        rd = {k:v for k,v in row.items()}
+        r = {
+                'day': rd['day']*1000,
+                'count': rd['count']
+                }
+        result.append(r)
+    
+    obj = {'results': result}
+    return jsonify(obj)
 
 # TODO: move all the rest functions into a blueprint
-@app.route('/rest/locationtime')
+@app.route('/rest/overview/locationtime/')
 def location_time():
     """
     return locationtime data
@@ -26,33 +46,41 @@ def location_time():
     q = db.session.execute('SELECT * FROM locationtime')
     
     result = []
+    timeseries = []
+    current_location = 'unset'
+    r = {}
     for row in q:
         rd = {k:v for k,v in row.items()}
         
-        r = {
-                'lat': rd['lat'],
-                'lon': rd['lon'],
+        # construct the data structure
+        # it consists of a location, lat, lon,
+        # and a list of timeseries. Same locations
+        # are always adjacent in the database.
+
+        if current_location != rd['location']:
+            current_location = rd['location']
+            if r:
+                r['timeseries'] = timeseries[:]
+                result.append(r.copy())
+
+            timeseries = []
+            r = {
+                'lat': str(rd['lat']),
+                'lon': str(rd['lon']),
                 'location': rd['location'],
-                'timeseries' : {
-                    'count': rd['count'],
-                    'day': rd['day']
-                    }
+                'timeseries' : []
                 }
+        else:
+            timeseries.append({
+                'count': str(rd['count']),
+                'day': str(rd['day']*1000)
+                })
 
-        result.append(r)
 
-
-    obj = {'locationTimeVolumeResults':
-            {'results': result}}
+    obj = {'results': result}
 
     return jsonify(obj)
 
-@app.route('/<path:dummy>')
-def catch_all(dummy):
-    """
-    hack for leaving javascript intact
-
-    serves all unknown routes to the static directory
-    """
-
-    return redirect(url_for('static', filename=dummy))
+@app.route('/<path:path>')
+def map(path):
+    return app.send_static_file(path)

@@ -44,7 +44,8 @@ define(['jquery', './ui_util'], function($, ui_util) {
                     }
                     return;
                 }
-                var data = $.parseJSON(result.responseText);
+                var data = result.responseJSON;
+                //var data = $.parseJSON(result.responseText);
                 callback(data);
             },
             error: function (request, status, error) {
