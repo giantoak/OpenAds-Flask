@@ -1,5 +1,5 @@
-from app import app
-from database import db
+from app import app, parser
+from database import db, rds
 
 from flask import jsonify
 from flask import render_template
@@ -7,6 +7,7 @@ from flask import url_for
 from flask import redirect
 
 import flask
+import ast
 
 @app.route('/')
 def overview():
@@ -59,8 +60,20 @@ def location_time():
 
         if current_location != rd['location']:
             current_location = rd['location']
+            a = parser.parse_address(current_location)
+            city, state = a.city or '', a.state or ''
+            
+            city_state = '{}, {}'.format(city, state)
+
+            place_data = rds.get(city_state)
+            if place_data:
+                pop = str(ast.literal_eval(place_data)['population'])
+            else:
+                pop = None
+
             if r:
                 r['timeseries'] = timeseries[:]
+
                 result.append(r.copy())
 
             timeseries = []
@@ -68,7 +81,8 @@ def location_time():
                 'lat': str(rd['lat']),
                 'lon': str(rd['lon']),
                 'location': rd['location'],
-                'timeseries' : []
+                'timeseries' : [],
+                'pop': pop
                 }
         else:
             timeseries.append({
