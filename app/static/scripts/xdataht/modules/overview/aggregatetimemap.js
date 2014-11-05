@@ -30,6 +30,8 @@ define(['jquery', 'jquery-ui', '../util/rest', '../util/ui_util', '../util/kmean
 			demographicsData: [],
 			dmaxCounts: [0,0,0,0,0,0],
 			geoData: [],
+            adjustPop: false,
+            adjustPopCutoff: 1,
 			maxCount: 12000,
 			maxDelta: 200,
 			maxClusterCount: 0,
@@ -88,17 +90,37 @@ define(['jquery', 'jquery-ui', '../util/rest', '../util/ui_util', '../util/kmean
 
                 var nodeOver = function(event) {
 					var items = [];
+                    items.push({attr:'Census Name', val:event.data.census_name});
+                    items.push({attr:'Population', val:event.data.pop});
+                    items.push({attr:'Raw Ad Count', val:event.data.raw_count});
+                    items.push({attr:'Ads Per Capita', val:event.data.raw_count/event.data.pop});
                 	if (that.mode==3) {
 						items.push({header:'Locations'});
-                		event.data.members.sort(function(a,b) {return b.count- a.count;});
+
+                		event.data.members.sort(function(a,b) {
+                            var bpop = b.pop!=0?b.pop:10000000000000,
+                                apop = a.pop!=0?a.pop:10000000000000;
+
+                            return that.adjustPop ? b.raw_count/(bpop) - a.raw_count/(apop) : b.count - a.count;
+                        });
                 		for (var i=0; i<event.data.members.length && i<5; i++) {
-                			items.push({attr:event.data.members[i].location,val:event.data.members[i].count});
+                            if (that.adjustPop) { // TODO: make adjustPop much less hacky
+                                var loc_string = event.data.members[i].location + ' (' + event.data.members[i].census_name + ')';
+                                items.push({
+                                    attr:loc_string, 
+                                    val: event.data.members[i].raw_count/(event.data.members[i].pop)
+                                });
+                            }
+                            else {
+                                items.push({attr:event.data.members[i].location,val:event.data.members[i].count});
+                            }
                 		}
                 		if (event.data.members.length>5) { items.push({header:'...'}); }
 						items.push({attr:'Total Ads', val:event.data.count});
                 	} else {
 						items.push({attr:'Location', val:event.data.location});
 						items.push({attr:'Ad Count', val:event.data.count});
+
                 	}
 					items.push({attr:'Longitude', val:event.data.lon});
 					items.push({attr:'Latitude', val:event.data.lat});
@@ -136,6 +158,47 @@ define(['jquery', 'jquery-ui', '../util/rest', '../util/ui_util', '../util/kmean
                 this.maxCountElem.css({position:'absolute',right:'2px',bottom:'2px','z-index':9999});
                 this.maxCountElem.text('Maximum visible ad count: 0');
                 container.append(this.maxCountElem);
+                
+                // population adjustment widget:
+                //
+                // slider:
+                this.adjustPopCutoffSlider = $('<input/>')
+                    .attr({
+                        type: 'range',
+                        min: .01,
+                        max: 5,
+                        value: that.adjustPopCutoff,
+                        step: .01,
+                        disabled: true
+                    })
+                    .css({
+                        position: 'absolute',
+                        left: '30px',
+                        bottom: '10px',
+                        'z-index':9999,
+                    })
+                    .mouseup(function() {
+                        that.adjustPopCutoff = this.value;
+                        that.updateMapData();
+                    });
+                container.append(this.adjustPopCutoffSlider);
+                
+                // checkbox:
+                this.adjustPopElem = $('<input/>', { type: 'checkbox' });
+                this.adjustPopElem.css({
+                    position:'absolute',
+                    left:'30px',
+                    bottom:'40px',
+                    id: 'adjust_pop',
+                    'z-index':9999
+                });
+                this.adjustPopElem.change(function() {
+                    that.adjustPop = this.checked;
+                    that.adjustPopCutoffSlider.attr({disabled: !this.checked});
+                    that.updateMapData();
+                });
+                var label = '<label>Adjust by Population</label>';
+                container.append(this.adjustPopElem.after(label));
                 
 			},
 
@@ -279,6 +342,8 @@ define(['jquery', 'jquery-ui', '../util/rest', '../util/ui_util', '../util/kmean
 				for (var i=0; i<this.geoTimeData.length; i++) {
 					var locationData = this.geoTimeData[i];
 					var pt = {lon: Number(locationData.lon), lat:Number(locationData.lat)};
+                    var pop = Number(locationData.pop);
+                    var census_name = locationData.display_name;
 					this.locationMap[locationData.location] = [pt.lat, pt.lon];
 					if (pt.lon<mapExtent.left || pt.lon>mapExtent.right || pt.lat<mapExtent.bottom || pt.lat>mapExtent.top) continue;
 					var count = 0;
@@ -305,7 +370,29 @@ define(['jquery', 'jquery-ui', '../util/rest', '../util/ui_util', '../util/kmean
 						fullCount += c;
 						dayCounts.push(c);
 					}
-					var data = {location:locationData.location,lat:pt.lat,lon:pt.lon,count:count};
+                    var c,tmp;
+                    if (this.adjustPop) {
+                        if (pop == 0) {
+                            // TODO: find sane default for non-geocoded places
+                            c = 0;
+                        }
+                        else {
+                            tmp = count/pop;
+                            
+                            if (tmp > this.adjustPopCutoff) {
+                                // TODO: better geocoding can solve this hackiness
+                                c = 0;
+                            }
+                            else {
+                                c = (count/pop)*300000;
+                            }
+                        }
+                    }
+                    else {
+                        c = count;
+                    }
+					var data = {location:locationData.location,lat:pt.lat,lon:pt.lon,count:c,census_name:census_name,pop:pop,
+                        raw_count:count};
 					fullCount = 0;
 					if (dayCounts.length>0) {
 						dayCounts.sort();

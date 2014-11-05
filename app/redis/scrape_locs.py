@@ -16,7 +16,7 @@ if __name__ == '__main__':
     s = Session()
     parser = address.AddressParser()
     
-    g = GetLoc()
+    g = GetLoc(reset_stats=True)
     # grab all locations from database
 
     r = s.execute('SELECT DISTINCT(location) FROM locationtime')

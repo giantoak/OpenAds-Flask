@@ -6,4 +6,9 @@ g = GetLoc()
 g.reset_redis_stats()
 
 # reset locationtime cache
-g.r.delete('locationtime')
+print 'THIS COMMAND WILL RESET THE QUEUE. ARE YOU SURE? [y/n]'
+
+c = sys.stdin.read(1)
+
+if c == 'y':
+    g.r.flushall()

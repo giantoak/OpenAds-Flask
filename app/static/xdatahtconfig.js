@@ -3,7 +3,7 @@ aperture.config.provide({
 	 * A default log configuration, which simply appends to the console.
 	 */
 	'aperture.log' : {
-		'level' : 'debug',
+		'level' : 'warn',
 		'appenders' : {
 			// Log to the console (if exists)
 			'consoleAppender' : {'level': 'debug'}

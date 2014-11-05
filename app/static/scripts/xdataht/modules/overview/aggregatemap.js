@@ -62,7 +62,9 @@ define(['jquery', '../util/rest', '../util/ui_util', '../util/colors'], function
                     var html = '<B>Location:</B>' + event.data.location + '<BR/>' +
                         '<B>Ad Count:</B>' + event.data.count + '<BR/>' +
                         '<B>Longitude:</B>' + event.data.lon + '<BR/>' +
-                        '<B>Latitude:</B>' + event.data.lat;
+                        '<B>Latitude:</B>' + event.data.lat + '<BR/>' +
+                        '<B>Census Name:</B>' + event.data.census_name+ '<BR/>' +
+                        '<B>Population:</B>' + event.data.pop;
                     aperture.tooltip.showTooltip({event:event, html:html});
                     $(container).css('cursor','pointer');
                 };

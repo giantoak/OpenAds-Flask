@@ -5,12 +5,14 @@ import multiprocessing
 import requests
 import logging
 import urllib
+import address
 
 class GetLoc(object):
     census_reporter = 'http://api.censusreporter.org/1.0/geo/elasticsearch?'
-    
+    sentinel = 'Xksm3k443209sfjxjzkz -- end --'    
     def __init__(self, queue_name='loc_queue', connection='localhost', reset_stats=False):
         self.q, self.r = self.get_redis(queue_name, connection)
+        self.parser = address.AddressParser()
         if reset_stats:
             self.reset_redis_stats()
     
@@ -46,15 +48,24 @@ class GetLoc(object):
 
         
         for name in q.consume():
-            if not name:
+            if name == self.sentinel:
                 logging.info('Received sentinel at {}'.format(worker_id))
                 break
             logging.debug('Sending request for {} from worker {}'
                     .format(name, worker_id))
             resobj = self.retrieve(name, timeout)
             if isinstance(resobj, dict):
-                r.set(name, resobj)
-                r.incr('success')
+                # check if response state matches
+
+                a = self.parser.parse_address(resobj['display_name'])
+                b = self.parser.parse_address(name)
+
+                if a.state == b.state:
+                    logging.debug('Matched {} with {}'.format(resobj['display_name'], name))
+                    r.set(name, resobj)
+                    r.incr('success')
+                else:
+                    r.incr('miss')
             elif resobj:
                 # returned error
                 r.incr(resobj)
@@ -66,7 +77,8 @@ class GetLoc(object):
         logging.info('Putting locs into queue...')
         for loc in locs:
             self.q.put(loc)
-
+        
+        self.q.put(self.sentinel)
         for i in range(num_workers):
             p = multiprocessing.Process(target=self.retriever, args=(i, self.q, self.r, timeout))
             p.start()

@@ -1,10 +1,11 @@
 from app import app, parser
 from database import db, rds
-
+import json
 from flask import jsonify
 from flask import render_template
 from flask import url_for
 from flask import redirect
+from flask import Response
 
 import flask
 import ast
@@ -44,6 +45,11 @@ def location_time():
     return locationtime data
     """
 
+    resp = rds.get('locationtime')
+    if resp:
+        return Response(resp, status=200, mimetype='application/json')
+
+
     q = db.session.execute('SELECT * FROM locationtime')
     
     result = []
@@ -65,15 +71,13 @@ def location_time():
             
             city_state = '{}, {}'.format(city, state)
 
-            place_data = rds.get(city_state)
-            if place_data:
-                pop = str(ast.literal_eval(place_data)['population'])
-            else:
-                pop = None
+            place_data_str = rds.get(city_state)
+            place_data = {}
+            if place_data_str:
+                place_data = ast.literal_eval(place_data_str)
 
             if r:
                 r['timeseries'] = timeseries[:]
-
                 result.append(r.copy())
 
             timeseries = []
@@ -82,7 +86,8 @@ def location_time():
                 'lon': str(rd['lon']),
                 'location': rd['location'],
                 'timeseries' : [],
-                'pop': pop
+                'pop': place_data.get('population', None),
+                'display_name': place_data.get('display_name', None)
                 }
         else:
             timeseries.append({
@@ -91,9 +96,10 @@ def location_time():
                 })
 
 
-    obj = {'results': result}
-
-    return jsonify(obj)
+    obj = json.dumps({'results': result})
+    
+    rds.set('locationtime', obj)
+    return Response(obj, status=200, mimetype='application/json')
 
 @app.route('/<path:path>')
 def map(path):
