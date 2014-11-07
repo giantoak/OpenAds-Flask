@@ -1,7 +1,7 @@
 from flask import Flask
-import address
+from getloc import GetLoc
 
+gl = GetLoc()
 app = Flask(__name__)
-parser = address.AddressParser()
 
 from app import views

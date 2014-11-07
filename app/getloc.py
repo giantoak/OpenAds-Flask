@@ -5,14 +5,13 @@ import multiprocessing
 import requests
 import logging
 import urllib
-import address
+import usaddress
 
 class GetLoc(object):
     census_reporter = 'http://api.censusreporter.org/1.0/geo/elasticsearch?'
     sentinel = 'Xksm3k443209sfjxjzkz -- end --'    
     def __init__(self, queue_name='loc_queue', connection='localhost', reset_stats=False):
         self.q, self.r = self.get_redis(queue_name, connection)
-        self.parser = address.AddressParser()
         if reset_stats:
             self.reset_redis_stats()
     
@@ -24,21 +23,21 @@ class GetLoc(object):
         url = self.census_reporter + urllib.urlencode(params)
         req = requests.get(url)
         if req.status_code != requests.codes.ok:
-            logging.error('Error requesting {}: {}'.format(name, req.status_code))
+            logging.error(u'Error requesting {}: {}'.format(name, req.status_code))
             return 'error'
         else:
             try:
                 res = req.json()['results']
             except:
-                logging.error('Error parsing request for {}'.format(name))
+                logging.error(u'Error parsing request for {}'.format(name))
                 return 'error'
             
             try:
                 resobj = res[0]
-                logging.debug('Successfully geocoded {}'.format(name))
+                logging.debug(u'Successfully geocoded {}'.format(name))
                 return resobj
             except IndexError:
-                logging.warning('No geocode found for {}'.format(name))
+                logging.warning(u'No geocode found for {}'.format(name))
                 return 'miss'
         
         return
@@ -51,20 +50,22 @@ class GetLoc(object):
             if name == self.sentinel:
                 logging.info('Received sentinel at {}'.format(worker_id))
                 break
-            logging.debug('Sending request for {} from worker {}'
+            logging.debug(u'Sending request for {} from worker {}'
                     .format(name, worker_id))
             resobj = self.retrieve(name, timeout)
             if isinstance(resobj, dict):
                 # check if response state matches
 
-                a = self.parser.parse_address(resobj['display_name'])
-                b = self.parser.parse_address(name)
+                b = self.parse(name)
 
-                if a.state == b.state:
-                    logging.debug('Matched {} with {}'.format(resobj['display_name'], name))
+                if b['state'] in resobj['display_name']:
+                    logging.debug(u'Matched {} with {}'.format(
+                        resobj['display_name'], name))
                     r.set(name, resobj)
                     r.incr('success')
                 else:
+                    logging.debug(u'{} not found in {}'.format(
+                        b['state'], resobj['display_name']))
                     r.incr('miss')
             elif resobj:
                 # returned error
@@ -88,6 +89,31 @@ class GetLoc(object):
         for w in workers:
             w.join()
     
+    def parse(self, name):
+        usa = ', USA'
+        if name.endswith(usa):
+            name = name[:-len(usa)]
+        
+        try:
+            parts = usaddress.parse(name)
+        except UnicodeDecodeError:
+            parts = ()
+        
+        place_parts = []
+        state = ''
+        
+        for n, t in parts:
+            if t == 'PlaceName':
+                place_parts.append(n.strip(' ,'))
+            elif t == 'StateName':
+                state = n.strip(' ,')
+
+        return {
+                'place': ' '.join(place_parts),
+                'state': state
+                }
+
+
     def reset_redis_stats(self):
             self.r.set('success', 0)
             self.r.set('miss', 0)

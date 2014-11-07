@@ -1,4 +1,4 @@
-from app import app, parser
+from app import app, gl
 from database import db, rds
 import json
 from flask import jsonify
@@ -66,10 +66,10 @@ def location_time():
 
         if current_location != rd['location']:
             current_location = rd['location']
-            a = parser.parse_address(current_location)
-            city, state = a.city or '', a.state or ''
+            a = gl.parse(current_location)
+            city, state = a['place'] or '', a['state'] or ''
             
-            city_state = '{}, {}'.format(city, state)
+            city_state = u'{} {}'.format(city, state)
 
             place_data_str = rds.get(city_state)
             place_data = {}
@@ -95,7 +95,6 @@ def location_time():
                 'day': str(rd['day']*1000)
                 })
 
-
     obj = json.dumps({'results': result})
     
     rds.set('locationtime', obj)
@@ -104,3 +103,6 @@ def location_time():
 @app.route('/<path:path>')
 def map(path):
     return app.send_static_file(path)
+
+
+

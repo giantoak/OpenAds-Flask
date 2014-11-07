@@ -5,34 +5,37 @@ from getloc import GetLoc
 from config import dburl
 import sqlalchemy
 from sqlalchemy.orm import scoped_session, sessionmaker
-import address
 import logging
 
 if __name__ == '__main__':
-    logging.basicConfig(level='INFO')
+    logging.basicConfig(filename='log.log', level='DEBUG')
     engine = sqlalchemy.create_engine(dburl)
     Session = scoped_session(sessionmaker(bind=engine))
 
     s = Session()
-    parser = address.AddressParser()
     
     g = GetLoc(reset_stats=True)
     # grab all locations from database
 
     r = s.execute('SELECT DISTINCT(location) FROM locationtime')
     locs = []
+    raws = []
     for loc in r:
-        
+        raws.append(loc)
         # TODO: check raw strings as well.
         # obvious place for improvement.
 
-        a = parser.parse_address(loc[0])
+        a = g.parse(loc[0])
 
-        if not a.city or not a.state:
+        if not a['place'] or not a['state']:
             continue
 
-        city_state = '{}, {}'.format(a.city, a.state)
+        city_state = u'{} {}'.format(a['place'], a['state'])
         
         locs.append(city_state)
-    
+
+    import pdb; pdb.set_trace()
     g.retrieve_all(locs, num_workers=1)
+
+
+
