@@ -67,9 +67,11 @@ class GetLoc(object):
                     logging.debug(u'{} not found in {}'.format(
                         b['state'], resobj['display_name']))
                     r.incr('miss')
+                    r.sadd('_misses', name)
             elif resobj:
                 # returned error
                 r.incr(resobj)
+                r.sadd('_misses', name)
                     
         return
 

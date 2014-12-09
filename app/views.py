@@ -6,9 +6,21 @@ from flask import render_template
 from flask import url_for
 from flask import redirect
 from flask import Response
+import requests
 
 import flask
 import ast
+
+@app.route('/geotag')
+def geotagger():
+    """
+    interactive geotagging
+    """
+
+    # return list of untagged places
+    
+    ut = rds.smembers('_misses')
+    return render_template('geotag.html', untagged=ut)
 
 @app.route('/')
 def overview():
@@ -18,6 +30,23 @@ def overview():
     
     return render_template('overview.html')
 
+@app.route('/rest/overview/suggest/<q>')
+def autocomplete_name(q):
+    endpoint = 'http://api.censusreporter.org/1.0/geo/elasticsearch?q={query}'
+    r = requests.get(endpoint.format(query=q))
+    results = []
+    try:
+        d = r.json()['results']
+        for row in d:
+            results.append(
+                    {
+                        'name': row['display_name'],
+                        'full_geoid': row['full_geoid']
+                    })
+    except KeyError, IndexError:
+        pass
+
+    return jsonify({'results': results})
 
 @app.route('/rest/overview/timeseries/')
 def time_series():

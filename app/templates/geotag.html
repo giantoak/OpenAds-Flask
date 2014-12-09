@@ -1,0 +1,52 @@
+<html>
+<head>
+<title>Active Learning Geotagger</title>
+
+<script src="http://code.jquery.com/jquery-1.11.1.min.js" type="text/javascript"></script>
+<script src="{{url_for('static', filename='scripts/typeahead.bundle.min.js')}}"></script>
+<script src="http://twitter.github.com/hogan.js/builds/3.0.1/hogan-3.0.1.js"></script>
+
+
+
+</head>
+<body>
+<select size="10">
+    {% for loc in untagged %}
+        <option value="{{loc}}">{{loc}}</option>
+    {% endfor %}
+</select>
+
+<div id="remote">
+    <input class="typeahead" type="text" placeholder="Suggested Place Name">
+</div>
+
+<script>
+
+var locSuggest = new Bloodhound({
+  datumTokenizer: function (data) {
+    console.log(data.value);
+    return data.value['results'];
+  },
+  
+  //Bloodhound.tokenizers.obj.whitespace('name'),
+  queryTokenizer: Bloodhound.tokenizers.whitespace,
+  remote: {
+        url: '/rest/overview/suggest/%QUERY',
+        filter: function (r) {
+            console.log(r);
+            return r['results'];
+        }
+    }
+});
+ 
+locSuggest.initialize();
+ 
+$('#remote .typeahead').typeahead({
+        minLength: 3,
+        }, {
+  name: 'locSuggest',
+  displayKey: 'name',
+  source: locSuggest.ttAdapter()
+});
+
+</script>
