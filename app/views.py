@@ -16,11 +16,23 @@ def geotagger():
     """
     interactive geotagging
     """
+    RATIO_CUTOFF = 1
 
     # return list of untagged places
+    ut = [(x, ast.literal_eval(y)) for x,y in rds.hgetall('_misses').iteritems()]
     
-    ut = rds.smembers('_misses')
-    return render_template('geotag.html', untagged=ut)
+    # build list of tagged places
+    t = []
+    for x, y in rds.hgetall('_hits').iteritems():
+        yz = ast.literal_eval(y)
+        count, pop = yz['count'], yz['population']
+        ratio = count/float(pop)
+        if ratio > RATIO_CUTOFF:
+            t.append((x, count, ratio))
+
+    t = sorted(t, key=lambda x: x[2], reverse=True)
+    
+    return render_template('geotag.html', untagged=ut, tagged=t)
 
 @app.route('/')
 def overview():
@@ -100,7 +112,7 @@ def location_time():
             
             city_state = u'{} {}'.format(city, state)
 
-            place_data_str = rds.get(city_state)
+            place_data_str = rds.hget('_hits', city_state)
             place_data = {}
             if place_data_str:
                 place_data = ast.literal_eval(place_data_str)

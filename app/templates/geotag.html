@@ -10,9 +10,17 @@
 
 </head>
 <body>
-<select size="10">
-    {% for loc in untagged %}
-        <option value="{{loc}}">{{loc}}</option>
+<label for="untagged">Untagged Items</label>
+<select id="untagged" size="10">
+    {% for loc, count in untagged %}
+    <option value="{{loc}}" pop="{{count}}">{{loc}}</option>
+    {% endfor %}
+</select>
+
+<label for="tagged">Tagged Items</label>
+<select id="tagged" size="10">
+    {% for loc, count, ratio in tagged %}
+    <option value="{{loc}}" pop="{{count}}">{{loc}}: {{ratio}}</option>
     {% endfor %}
 </select>
 

@@ -17,24 +17,27 @@ if __name__ == '__main__':
     g = GetLoc(reset_stats=True)
     # grab all locations from database
 
-    r = s.execute('SELECT DISTINCT(location) FROM locationtime')
+    r = s.execute('''SELECT location, SUM(count) 
+                        FROM locationtime 
+                        GROUP BY location''')
+
     locs = []
     raws = []
-    for loc in r:
+    for (loc, count) in r:
         raws.append(loc)
         # TODO: check raw strings as well.
         # obvious place for improvement.
 
-        a = g.parse(loc[0])
+        a = g.parse(loc)
 
         if not a['place'] or not a['state']:
             continue
 
         city_state = u'{} {}'.format(a['place'], a['state'])
         
-        locs.append(city_state)
+        locs.append((city_state, int(count)))
 
-    import pdb; pdb.set_trace()
+    #import pdb; pdb.set_trace()
     g.retrieve_all(locs, num_workers=1)
 
 

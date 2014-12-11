@@ -6,6 +6,7 @@ import requests
 import logging
 import urllib
 import usaddress
+import json
 
 class GetLoc(object):
     census_reporter = 'http://api.censusreporter.org/1.0/geo/elasticsearch?'
@@ -46,10 +47,16 @@ class GetLoc(object):
         """Continuously grab geoids from Census Reporter"""
 
         
-        for name in q.consume():
-            if name == self.sentinel:
+        for item in q.consume():
+
+            # end loop
+            if item == self.sentinel:
                 logging.info('Received sentinel at {}'.format(worker_id))
                 break
+            
+            # unpack tuple
+            name, count = item
+
             logging.debug(u'Sending request for {} from worker {}'
                     .format(name, worker_id))
             resobj = self.retrieve(name, timeout)
@@ -61,25 +68,28 @@ class GetLoc(object):
                 if b['state'] in resobj['display_name']:
                     logging.debug(u'Matched {} with {}'.format(
                         resobj['display_name'], name))
-                    r.set(name, resobj)
+                    
+                    resobj['count'] = count
+                    r.hset('_hits', name, resobj)
                     r.incr('success')
                 else:
                     logging.debug(u'{} not found in {}'.format(
                         b['state'], resobj['display_name']))
                     r.incr('miss')
-                    r.sadd('_misses', name)
+                    r.hset('_misses', name, {'count': count})
+
             elif resobj:
                 # returned error
                 r.incr(resobj)
-                r.sadd('_misses', name)
+                r.hset('_misses', name, {'count': count})
                     
         return
 
     def retrieve_all(self, locs, num_workers=1, timeout=2):
         workers = []
         logging.info('Putting locs into queue...')
-        for loc in locs:
-            self.q.put(loc)
+        for (loc, count) in locs:
+            self.q.put((loc, count))
         
         self.q.put(self.sentinel)
         for i in range(num_workers):
