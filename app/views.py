@@ -18,21 +18,30 @@ def geotagger():
     """
     RATIO_CUTOFF = 1
 
-    # return list of untagged places
-    ut = [(x, ast.literal_eval(y)) for x,y in rds.hgetall('_misses').iteritems()]
+    # list of untagged places
+    ut = [(x, ast.literal_eval(y)['count']) for x,y in rds.hgetall('_misses').iteritems()]
     
-    # build list of tagged places
-    t = []
+    # json of tagged places
+    # filter by population prior
+
+    t = {}
     for x, y in rds.hgetall('_hits').iteritems():
         yz = ast.literal_eval(y)
-        count, pop = yz['count'], yz['population']
+        count, pop, (lng, lat) = yz['count'], yz['population'], yz['location']
         ratio = count/float(pop)
-        if ratio > RATIO_CUTOFF:
-            t.append((x, count, ratio))
-
-    t = sorted(t, key=lambda x: x[2], reverse=True)
+        
+        
+        t[x] = {
+            'count': count, 
+            'ratio': ratio,
+            'lng': lng,
+            'lat': lat
+            }
     
-    return render_template('geotag.html', untagged=ut, tagged=t)
+    ut = sorted(ut, key=lambda x: x[1], reverse=True)
+    #t = sorted(t, key=lambda x: x[2], reverse=True)
+    
+    return render_template('geotag.html', untagged=ut, tagged=json.dumps(t))
 
 @app.route('/')
 def overview():
@@ -53,7 +62,9 @@ def autocomplete_name(q):
             results.append(
                     {
                         'name': row['display_name'],
-                        'full_geoid': row['full_geoid']
+                        'full_geoid': row['full_geoid'],
+                        'population': row['population'],
+                        'location': row['location']
                     })
     except KeyError, IndexError:
         pass
