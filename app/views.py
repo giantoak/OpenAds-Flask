@@ -21,7 +21,7 @@ def geotagger():
     """
     interactive geotagging home page
     """
-    q = db.session.execute('''SELECT loc_id, location, count, 
+    q = db.session.execute('''SELECT loc_id, location, count, geo_name,
                                      pop, lon, lat, discard 
                                 FROM location_data''')
     trashed, ut, t = [], [], {}
@@ -41,7 +41,7 @@ def geotagger():
 
         else:
             # replace all single quotes
-            loc_stripped = re.sub("'", '', rd['location'])
+            loc_stripped = re.sub("'", '', rd['geo_name'])
             t[loc_stripped] = {
                     'count': rd['count'],
                     'ratio': float(rd['count'])/rd['pop'],
@@ -74,14 +74,19 @@ def geotag_update():
     gid = request.form['geo_id']
     name = request.form['geo_name']
     pop = request.form['population']
-
+    
+    lon = request.form['longitude']
+    lat = request.form['latitude']
     db.session.execute('''UPDATE location_data SET geo_id=:gid,
                                 geo_name=:name,
                                 pop=:pop,
-                                discard=false
+                                discard=false,
+                                lat=:lat,
+                                lon=:lon
                         WHERE loc_id=:ld''', 
-                        dict(gid=gid, name=name, pop=pop, ld=loc_id))
-    
+                        dict(gid=gid, name=name, pop=pop, ld=loc_id, lon=lon,
+                            lat=lat))
+    db.session.commit() 
     # return blank page
     return ''
 
