@@ -20,6 +20,10 @@
     #places {display: block; float:left}
     #placelist-container {display: block}
     .dangerous {background-color: red}
+.twitter-typeahead .tt-hint
+{
+    display: none;
+}
 </style>
 
 <!-- Jinja variables -->
@@ -38,8 +42,8 @@
 
     <div>
         <select id="untagged" size="10">
-        {% for loc, count in untagged %}
-        <option value="{{loc}}" count="{{count}}">{{loc}}: {{count}}</option>
+        {% for loc, count, loc_id in untagged %}
+        <option value="{{loc}}" loc_id="{{loc_id}}" count="{{count}}">{{loc}}: {{count}}</option>
         {% endfor %}
         </select>
     </div>
@@ -53,7 +57,20 @@
         <select id="tagged" size="10">
         </select>
     </div>
-</span>
+    </span>
+    
+    <span class="placelist-container">
+    <div>
+        <label for="trash">Discarded Items</label>
+    </div>
+    <div>
+        <select id="trash" size="10">
+        {% for loc, count, loc_id, label in trashed %}
+        <option value="{{loc}}" loc_id="{{loc_id}}" count="{{count}}" orig="{{label}}">{{loc}}: {{count}}</option>
+        {% endfor %}
+        </select>
+    </div>
+    </span>
 
 <!-- Response menu -->
 
@@ -119,7 +136,6 @@ $(document).ready(function() {
             var ratio_a = selected_count/a['population'],
                 ratio_b = selected_count/b['population'];
 
-            console.log(a['name'], b['name'], ratio_a, ratio_b);
             return (ratio_a > ratio_b)? 1 : -1
     },
     remote: {
@@ -144,6 +160,14 @@ $(document).ready(function() {
     source: locSuggest.ttAdapter()
     });
     
+    $('#remote .typeahead').on('typeahead:selected typeahead:autocompleted',
+            function (e, datum) {
+            $('#remote .typeahead').data({
+                    geo_name: datum['name'],
+                    geo_id: datum['full_geoid'],
+                    population: datum['population']
+                });
+            });
     
     /*
     * Mapping code
@@ -172,11 +196,12 @@ attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</
         // Mark certain locations in red
         var c = d[1]['ratio'] > RATIO_THRESHOLD ? 'dangerous' : '',
             color = c == 'dangerous' ? 'red' : 'green';
-
+        
         tagged_select.append($('<option/>').attr({
                 'value': d[0],
                 'class': c,
                 }).data({
+                'loc_id': d[1]['id'],
                 'count': d[1]['count'],
                 'ratio': d[1]['ratio'],
                 'lng': d[1]['lng'],
@@ -231,16 +256,27 @@ attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</
     * Event handlers for updating names
     */
     $('#discard_button').click(function (d) {
-            var name = $('option:selected')[0].value;
-            discard(name);
+            var opt = $('option:selected');
+            discard(opt);
             });
+    
+    $('#accept_button').click(function (d) {
+            opt = $('option:selected');
+            data = $('#remote .typeahead').data();
+            accept(opt, data);
+        });
 
-    function discard(name) {
+    function discard(opt) {
         // TODO: notify server of removal
-        
-        console.log('discarding ' + name + ' : ' + map_keys[name]);
+        loc_id = opt.attr('loc_id');
+        console.log('discarding ' + loc_id + ' : ' + map_keys[opt.value]);
 
-        $('option[value="' + name + '"]').remove();
+        // add to trash selector
+        $('#trash').prepend(opt);
+
+        // remove name from selectors
+        $('option[value="' + opt.value+ '"]').remove();
+        
         // remove name from map
         try {
             map.removeLayer(map_keys[name]);
@@ -248,9 +284,17 @@ attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</
         catch (TypeError) {
             // do nothing
         }
-
-        // remove name from selectors
+        
+        $.ajax('/geotag/discard/' + loc_id);
     }
+
+    function accept(opt, data) {
+        loc_id = opt.data('loc_id');
+        data['loc_id'] = loc_id;
+        console.log(loc_id);
+        $.post('/geotag/update/', data = data);
+    }
+
 
 });
 </script>

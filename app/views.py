@@ -6,42 +6,84 @@ from flask import render_template
 from flask import url_for
 from flask import redirect
 from flask import Response
+from flask import request
 import requests
 
 import flask
 import ast
 
-@app.route('/geotag')
+import re
+
+# TODO: refactor geotag into its own module
+
+@app.route('/geotag/')
 def geotagger():
     """
-    interactive geotagging
+    interactive geotagging home page
     """
-    RATIO_CUTOFF = 1
-
-    # list of untagged places
-    ut = [(x, ast.literal_eval(y)['count']) for x,y in rds.hgetall('_misses').iteritems()]
+    q = db.session.execute('''SELECT loc_id, location, count, 
+                                     pop, lon, lat, discard 
+                                FROM location_data''')
+    trashed, ut, t = [], [], {}
     
-    # json of tagged places
-    # filter by population prior
+    for row in q:
+        rd = {k: v for k,v in row.items()}
+        
+        if rd['discard']:
+            # filter out discarded place names
 
-    t = {}
-    for x, y in rds.hgetall('_hits').iteritems():
-        yz = ast.literal_eval(y)
-        count, pop, (lng, lat) = yz['count'], yz['population'], yz['location']
-        ratio = count/float(pop)
+            label = 'untagged' if not rd['pop'] else 'tagged'
+            trashed.append((rd['location'], rd['count'], rd['loc_id'], label))
         
-        
-        t[x] = {
-            'count': count, 
-            'ratio': ratio,
-            'lng': lng,
-            'lat': lat
-            }
+        elif not rd['pop']:
+            # place names without geolocation
+            ut.append((rd['location'], rd['count'], rd['loc_id']))
+
+        else:
+            # replace all single quotes
+            loc_stripped = re.sub("'", '', rd['location'])
+            t[loc_stripped] = {
+                    'count': rd['count'],
+                    'ratio': float(rd['count'])/rd['pop'],
+                    'lng': rd['lon'],
+                    'lat': rd['lat'],
+                    'id': rd['loc_id']
+                    }
     
     ut = sorted(ut, key=lambda x: x[1], reverse=True)
-    #t = sorted(t, key=lambda x: x[2], reverse=True)
+    trashed = sorted(trashed, key=lambda x: x[1], reverse=True)
     
-    return render_template('geotag.html', untagged=ut, tagged=json.dumps(t))
+    return render_template('geotag.html', untagged=ut, trashed=trashed, tagged=json.dumps(t))
+
+@app.route('/geotag/discard/<loc_id>')
+def geotag_discard(loc_id):
+    db.session.execute('''UPDATE location_data SET discard=true 
+            WHERE loc_id=:ld''',
+            {'ld': loc_id})
+    
+    db.session.commit()
+    
+    # return blank page
+    return ''
+
+@app.route('/geotag/update/', methods=['GET', 'POST'])
+def geotag_update():
+
+    print request.form
+    loc_id = request.form['loc_id']
+    gid = request.form['geo_id']
+    name = request.form['geo_name']
+    pop = request.form['population']
+
+    db.session.execute('''UPDATE location_data SET geo_id=:gid,
+                                geo_name=:name,
+                                pop=:pop,
+                                discard=false
+                        WHERE loc_id=:ld''', 
+                        dict(gid=gid, name=name, pop=pop, ld=loc_id))
+    
+    # return blank page
+    return ''
 
 @app.route('/')
 def overview():
