@@ -202,7 +202,7 @@ def location_time():
         return Response(resp, status=200, mimetype='application/json')
 
 
-    q = db.session.execute('SELECT * FROM locationtime')
+    q = db.session.execute('SELECT * FROM locationtimepop')
     
     result = []
     timeseries = []
@@ -218,19 +218,6 @@ def location_time():
 
         if current_location != rd['location']:
             current_location = rd['location']
-            a = gl.parse(current_location)
-            city, state = a['place'] or '', a['state'] or ''
-            
-            city_state = u'{} {}'.format(city, state)
-
-            place_data_str = rds.hget('_hits', city_state)
-            place_data = {}
-            if place_data_str:
-                place_data = ast.literal_eval(place_data_str)
-
-            if r:
-                r['timeseries'] = timeseries[:]
-                result.append(r.copy())
 
             timeseries = []
             r = {
@@ -238,8 +225,8 @@ def location_time():
                 'lon': str(rd['lon']),
                 'location': rd['location'],
                 'timeseries' : [],
-                'pop': place_data.get('population', None),
-                'display_name': place_data.get('display_name', None)
+                'pop': rd.get('pop', ''),
+                'display_name': rd.get('location', '')
                 }
         else:
             timeseries.append({
