@@ -16,6 +16,59 @@ import re
 
 # TODO: refactor geotag into its own module
 
+@app.route('/rest/geotag/suggest/<q>')
+def table_suggest(q):
+    endpoint = 'http://api.censusreporter.org/1.0/table/search?q={query}'
+    r = requests.get(endpoint.format(query=q))
+
+    try:
+        results = r.json()
+    except:
+        results = []
+    
+    return jsonify({'results': results})
+
+@app.route('/geotag/export/')
+def exporter():
+    """
+    Export additional census information for geotagged locations.
+    """
+    tables = request.args.get('tables')
+    print tables
+    census_base = 'http://api.censusreporter.org/1.0/data/show/latest?table_ids={t}&geo_ids={g}'
+    q = db.session.execute('''SELECT geo_id 
+                                FROM location_data 
+                                WHERE geo_id IS NOT NULL''')
+
+    # hacky list of places that don't show up in the census reporter
+    ignore = {'31000US42060','31400US3562020764','31400US4790013644',
+            '31000US31100','31400US3562020764','31000US39100','31000US26180',
+            '31000US31100','33000US442','31000US43860'}
+    
+    ids = [x[0] for x in q if x[0] not in ignore]
+
+    #############
+    # : HTTP GET is capped at 8kb requests, geo_ids are ~12 bytes each 
+    # : Slightly conservative limit of 512 geo_ids per request
+    #############
+
+    n = 512 
+    id_splits = [ids[i:i+n] for i in xrange(0, len(ids), n)]
+    
+    results = []
+    for id_chunk in id_splits:
+        id_str = ','.join(id_chunk)
+        query_url = census_base.format(t=tables, g=id_str)
+
+        r = requests.get(query_url)
+        resp = r.json()
+
+        results.append(resp)
+    
+    # TODO: merge results
+    return Response(json.dumps(results), mimetype='text/csv')
+
+
 @app.route('/geotag/')
 def geotagger():
     """

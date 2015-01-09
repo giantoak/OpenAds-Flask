@@ -1,334 +1,38 @@
+<!DOCTYPE html>
+
 <html>
 <head>
 <title>Active Learning Geotagger</title>
 
-<!-- typeahead -->
-<script src="http://code.jquery.com/jquery-1.11.1.min.js" type="text/javascript"></script>
-<script src="{{url_for('static', filename='scripts/typeahead.bundle.min.js')}}"></script>
-
-<!-- leaflet -->
-<link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css" />
-<script src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
-
-<!-- underscore -->
-<script src="http://underscorejs.org/underscore-min.js"></script>
-
-<!-- style -->
-<style>
-    #map { height: 540; }
-    #response-container {height: 45}
-    #places {display: block; float:left}
-    #placelist-container {
-        display: block;
-        overflow: scroll;
-    }
-    option {
-        width: 300px;
-        overflow:visible;
-    }
-    .dangerous {background-color: red}
-.twitter-typeahead .tt-hint
-{
-    display: none;
-}
-</style>
+<!-- imports -->
+{% include 'includes.html.part' %}
 
 <!-- Jinja variables -->
 <meta id="locdata" data-tagged='{{ tagged | safe }}'>
 </head>
 
-
-
 <body>
-<!-- Places select menus -->
-<div id="places">
-    <span class="placelist-container">
-    <div>
-        <label for="untagged">Untagged Items</label>
+
+  <ul class="nav nav-tabs" role="tablist">
+    <li role="presentation" class="active"><a href="#tagger-view" aria-controls="tagger-view" role="tab" data-toggle="tab">Tagger</a></li>
+    <li role="presentation"><a href="#data-view" aria-controls="data-view" role="tab" data-toggle="tab">Data</a></li>
+    <li role="presentation"><a href="#export-view" aria-controls="export-view" role="tab" data-toggle="tab">Export</a></li>
+  </ul>
+
+<div class="tab-content">
+
+    <div role="tabpanel" class="container tab-pane" id="data-view">
+        <div id="data-explorer" style="width:600px;height:500px;"></div>    
     </div>
 
-    <div>
-        <select id="untagged" size="10">
-        {% for loc, count, loc_id in untagged %}
-            <option value="{{loc_id}}" 
-                data-name="{{loc}}" 
-                data-count="{{count}}"
-                title="{{loc}}: {{count}}">
-                {{loc}}: {{count}}
-            </option>
-        {% endfor %}
-        </select>
-    </div>
-    </span>
+    <div role="tabpanel" class="container tab-pane active" id="tagger-view">
+        {% include 'tagger.html.part' %}
+    </div> 
     
-    <span class="placelist-container">
-    <div>
-        <label for="tagged">Tagged Items</label>
-    </div>
-    <div>
-        <select id="tagged" size="10">
-        </select>
-    </div>
-    </span>
-    
-    <span class="placelist-container">
-    <div>
-        <label for="trash">Discarded Items</label>
-    </div>
-    <div>
-        <select id="trash" size="10">
-        {% for loc, count, loc_id, label in trashed %}
-            <option value="{{loc_id}}" 
-                data-name="{{loc}}" 
-                data-count="{{count}}" 
-                data-orig="{{label}}"
-                title="{{loc}}: {{count}}">
-                {{loc}}: {{count}}
-            </option>
-        {% endfor %}
-        </select>
-    </div>
-    </span>
+    <div role="tabpanel" class="container tab-pane" id="export-view">
+        {% include 'export.html.part' %}
+    </div> 
+</div> 
 
-<!-- Response menu -->
-
-<div id="response-container">
-    <div id="response">
-        <div>
-            <form id="remote">
-                <input type="submit" id="accept_button" value="Accept">
-                <input type="button" id="discard_button" value="Discard">
-                <input class="typeahead" type="text" placeholder="Suggested Place Name">
-            </form>
-        </div>
-    </div>
-</div>
-
-</div>
-<!-- Map -->
-
- <div id="map"></div>
- 
-
-<script>
-
-$(document).ready(function() {
-    /*
-    * Add tagged locations to dropdown
-    *
-    */
-    var RATIO_THRESHOLD = 1.0;
-
-    var tagged = $('#locdata').data()['tagged'],
-        tagged_list = _.pairs(tagged),
-        tagged_select = $('#tagged');
-    
-    /*
-    * Autocomplete code
-    *
-    */
-    var selected_count;
-
-    // hide the autocomplete field on load
-    $('#response').hide()
-
-    $('select').change(function() {
-            // Save option as selected
-            var option = $(this).find('option:selected');
-
-            selectPlace(option.attr('value'));
-
-    });
-
-    var locSuggest = new Bloodhound({
-    datumTokenizer: function (data) {
-        return data.value['results'];
-    },
-    
-    queryTokenizer: Bloodhound.tokenizers.whitespace,
-    sorter: function (a, b) {
-
-            // sort responses by population/ad count priors
-            // TODO: make this a sensible prior; currently sorts by population
-
-            var ratio_a = selected_count/a['population'],
-                ratio_b = selected_count/b['population'];
-
-            return (ratio_a > ratio_b)? 1 : -1
-    },
-    remote: {
-            url: '/rest/overview/suggest/%QUERY',
-            filter: function (r) {
-                return r['results'];
-            }
-        }
-    });
-    
-    locSuggest.initialize();
-    
-    $('#remote .typeahead').typeahead({
-            minLength: 3,
-            }, {
-    name: 'locSuggest',
-    displayKey: function (d) {
-        // Round population display to 4 decimal places
-        return d['name'] + ': ' + 
-            Math.round(selected_count/d['population']*10000)/10000;
-    },
-    source: locSuggest.ttAdapter()
-    });
-    
-    $('#remote .typeahead').on('typeahead:selected typeahead:autocompleted',
-            function (e, datum) {
-            console.log(datum);
-            $('#remote .typeahead').data({
-                    geo_name: datum['name'],
-                    geo_id: datum['full_geoid'],
-                    population: datum['population'],
-                    longitude: datum['location'][0],
-                    latitude: datum['location'][1]
-                });
-            });
-    
-    /*
-    * Mapping code
-    *
-    */
-    var map = L.map('map').setView([38, -97], 4);
-    L.tileLayer("http://{s}.tiles.mapbox.com/v3/sz-giantoak.kfe07odo/{z}/{x}/{y}.png", {
-attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="http://mapbox.com">Mapbox</a>',
-        maxZoom: 18
-    }).addTo(map);
-
-    /*
-    *
-    * Add tagged items to selector and map
-    *
-    */
-    tagged_list = _.sortBy(tagged_list, function (d) {
-        return -d[1]['ratio'];
-        });
-    
-    map_keys = {};
-
-    // Iterate through tagged items
-    _.each(tagged_list, function(d) {
-
-        // Mark certain locations in red
-        var c = d[1]['ratio'] > RATIO_THRESHOLD ? 'dangerous' : '',
-            color = c == 'dangerous' ? 'red' : 'green';
-        
-        tagged_select.append($('<option/>').attr({
-                'value': d[1]['id'],
-                'class': c,
-                'title': d[0] + ': ' + d[1]['ratio']
-                }).data({
-                'name': d[0],
-                'count': d[1]['count'],
-                'ratio': d[1]['ratio'],
-                'lng': d[1]['lng'],
-                'lat': d[1]['lat']
-                }).text(d[0] + ': ' + d[1]['ratio']));
-        
-        // Add map glyph
-        var circle = L.circle([d[1].lat, d[1].lng], 
-            Math.min(Math.pow(d[1].ratio, 3), 1),
-            {
-                            color: color,
-                            fillColor: '#f03',
-                            fillOpacity: 0.5,
-                            name: d[0]
-                            });
-        circle.addTo(map);
-        circle.bindPopup(d[0] + ', Ratio: ' + d[1].ratio + ', Ad Counts: ' + d[1].count);
-        // Event handling for glyph clicks
-        circle.on('click', function(e) {
-            selectPlace(d[0]);
-            });
-
-        map_keys[d[1]['id']] = circle;
-    });
-    console.log(map_keys);
-
-    /* Select a place from the options and deselect all others */
-    function selectPlace(name) {
-        $('option').prop('selected', false);
-        var option = $('option[value="' + name + '"]').prop('selected', true),
-            option_data = option.data();
-        
-        $('#remote .typeahead')
-            .attr('placeholder', option_data.name)
-            .typeahead('val', '');
-
-        selected_count = parseFloat(option_data.count);
-        
-        try {
-            var popup = L.popup()
-                .setLatLng([option_data.lat, option_data.lng])
-                .setContent(name + ', Ratio: ' + option_data.ratio + ', Ad Counts: ' + option_data.count)
-                .openOn(map);
-        }
-        catch (TypeError) {
-            // do nothing
-        }
-
-        // show autocomplete box, give it focus
-        $('#response').show();
-        $('#remote .typeahead').focus();
-    }
-
-    /*
-    * Event handlers for updating names
-    */
-    $('#discard_button').click(function (d) {
-            var opt = $('option:selected');
-            discard(opt);
-            $('#response').hide();
-            });
-    
-    $('#remote').submit(function (d) {
-            opt = $('option:selected');
-            data = $('#remote .typeahead').data();
-            accept(opt, data);
-            $('#response').hide();
-        });
-
-    function discard(opt) {
-        // TODO: notify server of removal
-        loc_id = opt.attr('value');
-        console.log('discarding ' + loc_id + ' : ' + map_keys[loc_id]);
-
-        // remove name from selectors
-        $('option[value="' + loc_id + '"]').remove();
-        
-        // add to trash selector
-        $('#trash').prepend(opt);
-        
-        // remove name from map
-        try {
-            map.removeLayer(map_keys[name]);
-        }
-        catch (TypeError) {
-            // do nothing
-            // all untagged elements go here because they aren't on the map
-        }
-        
-        $.ajax('/geotag/discard/' + loc_id);
-    }
-
-    function accept(opt, data) {
-        loc_id = opt.attr('value');
-        data['loc_id'] = loc_id;
-        console.log(loc_id);
-        $.post('/geotag/update/', data = data);
-
-        // remove name from selectors
-        $('option[value="' + loc_id + '"]').remove();
-
-        // TODO: sync selectors + data (add edited name)
-    }
-
-});
-</script>
 </body>
 </html>
