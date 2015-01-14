@@ -5,7 +5,7 @@ $(document).ready(function() {
     */
     var RATIO_THRESHOLD = 1.0;
 
-    var tagged = $('#locdata').data()['tagged'],
+    var tagged = $('#data').data()['tagged'],
         tagged_list = _.pairs(tagged),
         tagged_select = $('#tagged');
     /*

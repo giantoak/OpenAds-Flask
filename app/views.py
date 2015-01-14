@@ -7,15 +7,56 @@ from flask import url_for
 from flask import redirect
 from flask import Response
 from flask import request
+from flask import session
+from werkzeug import secure_filename
+import random
+import os
+import pandas as pd
 import requests
+from string import ascii_lowercase
 
 import flask
 import ast
 
 import re
+from config import UPLOAD_DIR
+
+# TODO: refactor upload and dataset selection logic into module
+@app.route('/upload/')
+def upload_splash():
+    return render_template('upload.html')
+
+@app.route('/upload/endpoint', methods=['POST'])
+def receive_upload():
+    """
+    Architecture design notes: /upload uploads all of the posted
+    files to the server, saves the file names in the global sesion
+    variable (g), and renders the client results page.
+
+    On load, the client results page connects to a websocket, which
+    triggers the API calls. Results are streamed back to the client
+    as they come in.
+
+    """
+    ALLOWED_EXTENSIONS = ['csv'] # TODO: provide support for excel
+
+    def allowed_file(filename):
+        return '.' in filename and \
+                filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
+    
+    f = flask.request.files['file']
+    if allowed_file(f.filename):
+        sf = secure_filename(f.filename)
+        obscured_fn = sf + ''.join([random.choice(ascii_lowercase) for _ in range(20)])
+        dest = os.path.join(UPLOAD_DIR, obscured_fn)
+        f.save(dest)
+
+        session['filename'] = dest
+        return present()
+
+    raise TypeError('Bad file type')
 
 # TODO: refactor geotag into its own module
-
 @app.route('/rest/geotag/suggest/<q>')
 def table_suggest(q):
     endpoint = 'http://api.censusreporter.org/1.0/table/search?q={query}'
@@ -68,9 +109,34 @@ def exporter():
     # TODO: merge results
     return Response(json.dumps(results), mimetype='text/csv')
 
+@app.route('/render/')
+def present():
+    try:
+        fn = session['filename']
+    except KeyError:
+        return uploader()
+    
+    return render_template('tabs-home.html')
+
+@app.route('/load_data')
+def rest_api_for_data():
+    # read in file, pipe into data
+    try:
+        fn = session['filename']
+    except KeyError:
+        return uploader()
+    df = pd.read_csv(fn)
+    records = json.dumps(df.to_dict())
+    return Response(records, mimetype='text/json')
+
+@app.route('/retrieve/<file_id>')
+def retrieve():
+    # grab data
+
+    return
 
 @app.route('/geotag/')
-def geotagger():
+def uploader():
     """
     interactive geotagging home page
     """
@@ -106,7 +172,8 @@ def geotagger():
     ut = sorted(ut, key=lambda x: x[1], reverse=True)
     trashed = sorted(trashed, key=lambda x: x[1], reverse=True)
     
-    return render_template('geotag.html', untagged=ut, trashed=trashed, tagged=json.dumps(t))
+    return render_template('geotag.html', untagged=ut, trashed=trashed, 
+            tagged=json.dumps(t), data_loaded=session.get('filename', ''))
 
 @app.route('/geotag/discard/<loc_id>')
 def geotag_discard(loc_id):
@@ -197,10 +264,6 @@ def location_time():
     return locationtime data
     """
 
-    resp = rds.get('locationtime')
-    if resp:
-        return Response(resp, status=200, mimetype='application/json')
-
 
     q = db.session.execute('SELECT * FROM locationtimepop')
     
@@ -219,6 +282,10 @@ def location_time():
         if current_location != rd['location']:
             current_location = rd['location']
 
+            if r:
+                r['timeseries'] = timeseries[:]
+                result.append(r.copy())
+
             timeseries = []
             r = {
                 'lat': str(rd['lat']),
@@ -236,7 +303,6 @@ def location_time():
 
     obj = json.dumps({'results': result})
     
-    rds.set('locationtime', obj)
     return Response(obj, status=200, mimetype='application/json')
 
 @app.route('/<path:path>')

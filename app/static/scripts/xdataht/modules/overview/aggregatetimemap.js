@@ -89,11 +89,14 @@ define(['jquery', 'jquery-ui', '../util/rest', '../util/ui_util', '../util/kmean
                     .filter(selectedNodes.constant('highlight'));
 
                 var nodeOver = function(event) {
-					var items = [];
+					var items = [],
+                        // set ratio to 0 when the population data doesn't exist
+                        ratio = event.data.pop == 0 ? 0 : event.data.raw_count/event.data.pop;
+
                     items.push({attr:'Census Name', val:event.data.census_name});
                     items.push({attr:'Population', val:event.data.pop});
                     items.push({attr:'Raw Ad Count', val:event.data.raw_count});
-                    items.push({attr:'Ads Per Capita', val:event.data.raw_count/event.data.pop});
+                    items.push({attr:'Ads Per Capita', val:ratio});
                 	if (that.mode==3) {
 						items.push({header:'Locations'});
 
@@ -405,7 +408,7 @@ define(['jquery', 'jquery-ui', '../util/rest', '../util/ui_util', '../util/kmean
 						data.avgDay = 0;
 					}
 					var daySpan = Math.floor((windowDayEnd-windowDayStart)/60/60/24/1000);
-					data.periodAvgDay = count/(daySpan+1);
+					data.periodAvgDay = c/(daySpan+1);
 					if (data.periodAvgDay>data.avgDay) {
 						data.isPositive = true;
 						data.ratioDelta = (data.periodAvgDay/data.avgDay)-1;
@@ -415,7 +418,7 @@ define(['jquery', 'jquery-ui', '../util/rest', '../util/ui_util', '../util/kmean
 						data.ratioDelta = (data.avgDay-data.periodAvgDay)/data.avgDay;
 						data.delta = data.avgDay-data.periodAvgDay;
 					}
-					if (this.maxCount<count) this.maxCount = count;
+					if (this.maxCount<c) this.maxCount = c;
 					if (this.maxDelta<data.delta) this.maxDelta = data.delta;
 					this.geoData.push(data);
 				}
@@ -479,6 +482,7 @@ define(['jquery', 'jquery-ui', '../util/rest', '../util/ui_util', '../util/kmean
 		        	for (var i=0; i<result.results.length; i++) {
 		        		that.geoTimeData.push(result.results[i]);
 		        	}
+                    console.log(that.geoTimeData);
 		        	that.setTimeWindow(that.timeStart, that.timeEnd);
 		        	that.hideLoadingDialog();
 		        });

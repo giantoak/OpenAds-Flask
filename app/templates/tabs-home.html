@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 
-<html ng-app>
+<html ng-app="covarApp">
 <head>
 <title>Active Learning Geotagger</title>
 
@@ -11,20 +11,18 @@
 
 <body>
 
-{% if data|length %}
   {% include 'includes.html.part' %}
 
-  <meta id="data" data-tagged='{{ data | safe }}'>
   <ul class="nav nav-tabs" role="tablist">
     <li role="presentation" class="active"><a href="#data-view" aria-controls="data-view" role="tab" data-toggle="tab">Import</a></li>
     <li role="presentation"><a href="#tagger-view" aria-controls="tagger-view" role="tab" data-toggle="tab">Tagger</a></li>
     <li role="presentation"><a href="#export-view" aria-controls="export-view" role="tab" data-toggle="tab">Export</a></li>
   </ul>
 
-<div class="tab-content">
+<div class="tab-content" ng-controller="UploadedDataCtrl">
 
     <div role="tabpanel" class="container tab-pane active" id="data-view">
-        <div id="data-explorer" style="width:600px;height:500px;"></div> 
+        <div id="data-explorer" style="width:600px;height:500px;" s-grid></div> 
     </div>
 
     <div role="tabpanel" class="container tab-pane" id="tagger-view">
@@ -36,16 +34,6 @@
     </div> 
 </div> 
 
-{% else %}
-
-<!-- Form for uploading data -->
-
-<form method="POST" enctype="multipart/form-data" action="/upload/">
-    <input type="file" name="file">
-    <input type="submit" value="Upload CSV">
-</form>
-
-{% endif %}
 </body>
 </html>
 

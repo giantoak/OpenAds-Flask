@@ -47,7 +47,7 @@ if __name__ == '__main__':
         except TypeError:
             lon, lat = None, None
 
-        s.execute('''UPDATE location_data SET pop=:pop, 
+        s.execute('''UPDATE location_data_raw SET pop=:pop, 
                                               geo_id=:gid, 
                                               geo_name=:name,
                                               lat=:lat,

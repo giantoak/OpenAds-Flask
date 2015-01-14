@@ -34,17 +34,15 @@
 <script type="text/javascript" src="{{url_for('static', filename='scripts/slickgrid/slick.grid.js')}}"></script>
 <script type="text/javascript" src="{{url_for('static', filename='scripts/slickgrid/slick.dataview.js')}}"></script>
 <script type="text/javascript" src="{{url_for('static', filename='scripts/slickgrid/slick.editors.js')}}"></script>
-<script type="text/javascript" src="{{url_for('static', filename='scripts/slickgrid/plugins/slick.rowselectionmodel.js')}}"></script>
-<script type="text/javascript" src="{{url_for('static', filename='scripts/slickgrid/plugins/slick.rowmovemanager.js')}}"></script>
 
-<!-- recline and dependencies -->
-<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/backbone.js/1.1.2/backbone-min.js"></script>
-<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/mustache.js/0.8.1/mustache.min.js"></script>
-<script type="text/javascript" src="{{url_for('static', filename='scripts/recline.js')}}"></script>
-<script src="//cdnjs.cloudflare.com/ajax/libs/timelinejs/2.35.2/js/timeline-min.js"></script>
+<!-- slickgrid plugins -->
+<script type="text/javascript" src="{{url_for('static', filename='scripts/slickgrid/plugins/slick.headermenu.js')}}"></script>
+
+<!-- angular -->
+<script src="//cdnjs.cloudflare.com/ajax/libs/angular.js/1.3.8/angular.min.js"></script>
 
 <!-- local scripts -->
+<script src="{{url_for('static', filename='scripts/load-globals.js')}}"></script>
 <script src="{{url_for('static', filename='scripts/geotag.js')}}"></script>
-<script src="{{url_for('static', filename='scripts/recline-app.js')}}"></script>
 <script src="{{url_for('static', filename='scripts/export-tab.js')}}"></script>
 
