@@ -36,7 +36,7 @@ def exporter():
     tables = request.args.get('tables')
     print tables
     census_base = 'http://api.censusreporter.org/1.0/data/show/latest?table_ids={t}&geo_ids={g}'
-    q = db.session.execute('''SELECT geo_id 
+    q = db.session.execute('''SELECT geo_id, count 
                                 FROM location_data 
                                 WHERE geo_id IS NOT NULL''')
 
@@ -44,8 +44,12 @@ def exporter():
     ignore = {'31000US42060','31400US3562020764','31400US4790013644',
             '31000US31100','31400US3562020764','31000US39100','31000US26180',
             '31000US31100','33000US442','31000US43860'}
-    
-    ids = [x[0] for x in q if x[0] not in ignore]
+    ids = []
+    counts = {}
+    for row in q:
+        if row[0] not in ignore:
+            ids.append(row[0])
+            counts[row[0]] = row[1]
 
     #############
     # : HTTP GET is capped at 8kb requests, geo_ids are ~12 bytes each 
@@ -65,8 +69,19 @@ def exporter():
 
         results.append(resp)
     
+    combined = {}
+    for k, v in results[0].items():
+        combined[k] = {}
+
+    for group in results:
+        for k, v in group.items():
+            combined[k].update(v)
+    
+    for place in combined['data']:
+        combined['data'][place]['ad_count'] = counts[place]
+
     # TODO: merge results
-    return Response(json.dumps(results), mimetype='text/csv')
+    return Response(json.dumps(combined), mimetype='text/json')
 
 
 @app.route('/geotag/')
