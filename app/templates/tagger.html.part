@@ -37,12 +37,13 @@ press the discard button. No data is deleted from the server.
     </div>
 
     <div>
-        <select id="untagged" size="10">
+        <select id="untagged" class="geotag-select" size="10">
         {% for loc, count, loc_id in untagged %}
             <option value="{{loc_id}}" 
                 data-name="{{loc}}" 
                 data-count="{{count}}"
-                title="{{loc}}: {{count}}">
+                title="{{loc}}: {{count}}"
+                class="geotag-option">
                 {{loc}}: {{count}}
             </option>
         {% endfor %}
@@ -55,7 +56,7 @@ press the discard button. No data is deleted from the server.
         <label for="tagged">Geocoded Places ("Place: Ad/Population Ratio")</label>
     </div>
     <div>
-        <select id="tagged" size="10">
+        <select id="tagged" class="geotag-select" size="10">
         </select>
     </div>
     </span>

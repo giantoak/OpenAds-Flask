@@ -9,7 +9,6 @@
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap-theme.min.css">
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js"></script>
 
-
 <!-- typeahead -->
 <script src="http://code.jquery.com/jquery-1.11.1.min.js" type="text/javascript"></script>
 <script src="{{url_for('static', filename='scripts/typeahead.bundle.min.js')}}"></script>
@@ -43,8 +42,22 @@
 <script type="text/javascript" src="{{url_for('static', filename='scripts/recline.js')}}"></script>
 <script src="//cdnjs.cloudflare.com/ajax/libs/timelinejs/2.35.2/js/timeline-min.js"></script>
 
+<!-- d3js/metricsgraphics -->
+<script src='https://cdnjs.cloudflare.com/ajax/libs/d3/3.4.11/d3.min.js'
+charset='utf-8'></script>
+<script src="{{url_for('static', filename='scripts/metricsgraphics.js')}}"></script>
+
 <!-- local scripts -->
 <script src="{{url_for('static', filename='scripts/geotag.js')}}"></script>
 <script src="{{url_for('static', filename='scripts/recline-app.js')}}"></script>
 <script src="{{url_for('static', filename='scripts/export-tab.js')}}"></script>
+<script src="{{url_for('static', filename='scripts/tempus.js')}}"></script>
+
+<link href='{{url_for('static',
+        filename='theme/metricsgraphics-demo.css')}}'
+rel='stylesheet' type='text/css' id='light'>
+
+<link href='{{url_for('static',
+        filename='theme/metricsgraphics.css')}}'
+rel='stylesheet' type='text/css' id='light'>
 

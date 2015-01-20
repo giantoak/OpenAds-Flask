@@ -7,6 +7,9 @@
 <!-- imports -->
 {% include 'includes.html.part' %}
 
+<link
+href='http://www.giantoak.com/wp-content/themes/giantoak/images/logo.png'
+rel='icon' type='image/png' />
 <!-- Jinja variables -->
 <meta id="locdata" data-tagged='{{ tagged | safe }}'>
 </head>
@@ -16,6 +19,8 @@
   <ul class="nav nav-tabs" role="tablist">
     <li role="presentation" class="active"><a href="#tagger-view" aria-controls="tagger-view" role="tab" data-toggle="tab">Tagger</a></li>
     <li role="presentation"><a href="#data-view" aria-controls="data-view" role="tab" data-toggle="tab">Data</a></li>
+    <li role="presentation"><a href="#tempus-view"
+        aria-controls="data-view" role="tab" data-toggle="tab">Tempus</a></li>
     <li role="presentation"><a href="#export-view" aria-controls="export-view" role="tab" data-toggle="tab">Export</a></li>
   </ul>
 
@@ -27,7 +32,12 @@
 
     <div role="tabpanel" class="container tab-pane active" id="tagger-view">
         {% include 'tagger.html.part' %}
-    </div> 
+    </div>
+
+    <div role="tabpanel" class="container tab-pane" id="tempus-view">
+        {% include 'tempus.html.part' %}
+    </div>
+
     
     <div role="tabpanel" class="container tab-pane" id="export-view">
         {% include 'export.html.part' %}

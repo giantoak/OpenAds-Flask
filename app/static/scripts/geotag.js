@@ -17,9 +17,9 @@ $(document).ready(function() {
     // hide the autocomplete field on load
     $('#response').hide()
 
-    $('select').change(function() {
+    $('select .geotag-select').change(function() {
             // Save option as selected
-            var option = $(this).find('option:selected');
+            var option = $(this).find('option.geotag-option:selected');
 
             selectPlace(option.attr('value'));
 
@@ -105,7 +105,7 @@ attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</
         
         tagged_select.append($('<option/>').attr({
                 'value': d[1]['id'],
-                'class': c,
+                'class': c + 'geotag-option',
                 'title': d[0] + ': ' + d[1]['ratio']
                 }).data({
                 'name': d[0],
@@ -137,8 +137,9 @@ attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</
 
     /* Select a place from the options and deselect all others */
     function selectPlace(id) {
-        $('option').prop('selected', false);
-        var option = $('option[value="' + id + '"]').prop('selected', true),
+        $('option .geotag-option').prop('selected', false);
+        console.log('selected ' + id);
+        var option = $('option[value="' + id + '"][class="geotag-option"]').prop('selected', true),
             option_data = option.data();
         
         $('#remote .typeahead')
@@ -168,13 +169,13 @@ attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</
     * Event handlers for updating names
     */
     $('#discard_button').click(function (d) {
-            var opt = $('option:selected');
+            var opt = $('option.geotag-option:selected');
             discard(opt);
             $('#response').hide();
             });
     
     $('#remote').submit(function (d) {
-            opt = $('option:selected');
+            opt = $('option.geotag-option:selected');
             data = $('#remote .typeahead').data();
             accept(opt, data);
             $('#response').hide();
@@ -186,7 +187,7 @@ attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</
         console.log('discarding ' + loc_id + ' : ' + map_keys[loc_id]);
 
         // remove name from selectors
-        $('option[value="' + loc_id + '"]').remove();
+        $('option[value="' + loc_id + '"][class="geotag-option"]').remove();
         
         // add to trash selector
         $('#trash').prepend(opt);
@@ -210,7 +211,7 @@ attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</
         $.post('/geotag/update/', data = data);
 
         // remove name from selectors
-        $('option[value="' + loc_id + '"]').remove();
+        $('option[value="' + loc_id + '"][class="geotag-option"]').remove();
 
         // TODO: sync selectors + data (add edited name)
     }

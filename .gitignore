@@ -3,4 +3,5 @@
 app/config.py
 app/static/map/
 flask-env/
+env/
 *.log

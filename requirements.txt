@@ -10,6 +10,8 @@ argparse==1.2.1
 hotqueue==0.2.7
 itsdangerous==0.24
 nose==1.3.4
+python-crfsuite==0.8.1
 redis==2.10.3
 requests==2.4.3
+usaddress==0.2.8
 wsgiref==0.1.2
