@@ -1,16 +1,15 @@
 import unittest
 import requests
 import json
-import ipdb
+from config import OPENCPUURL
+import os
 
 # These tests are based off of the existing data in the rlines package
 # from openads
 class ocpu_wrapper():
-    def __init__(self, url, baseurl = 'http://localhost', header={}, files={}, data=''):
-        if 'http' in url:
-            self.url=url
-        else:
-            self.url= baseurl + url
+    def __init__(self, url, baseurl = OPENCPUURL, header={}, files={}, data=''):
+        
+        self.url= os.path.join(baseurl, url)
         self.baseurl = baseurl
         self.header = header
         self.files = files
@@ -36,7 +35,7 @@ class ocpu_wrapper():
         """
         if not self.result:
             raise(NameError('Search not performed!'))
-        req = requests.get(self.baseurl + '/ocpu/tmp/' + self.session_id + '/R/.val/' + format)
+        req = requests.get(os.path.join(self.baseurl, '/ocpu/tmp/', self.session_id, '/R/.val/', format))
         req.raise_for_status()
         return req.json()
     def get_result_pointer(self):
@@ -97,7 +96,6 @@ def dict_to_r_args(input_dict):
         #else:
             #try:
         elif isinstance(v,ocpu_wrapper):
-                #ipdb.set_trace()
             output_args.append('%s=%s' % (k, v.get_result_pointer()))
             #except:
         else:

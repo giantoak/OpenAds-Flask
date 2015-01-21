@@ -8,11 +8,45 @@ from flask import redirect
 from flask import Response
 from flask import request
 import requests
+from helpers import *
+import datetime
 
+from config import APP_ROOT, OPENCPUURL
 import flask
 import ast
 
 import re
+import os
+
+# TODO: split up this
+@app.route('/get_comparison_upload/', methods=['POST'])
+def get_comparison_upload():
+    start = datetime.datetime.now()
+
+    with open(os.path.join(APP_ROOT, 'static', 'data', 'region_features.csv')) as f:
+        files = {'data': f.read()}
+    endpoint = 'ocpu/library/rlines/R/store_csv/'
+    d = ocpu_wrapper(url=endpoint,  files=files)
+    d.perform()
+    
+    input_data = json.loads(request.data)
+    data = {
+            'target.region':str(input_data['targetRegion']) ,
+            'comparison.vars':['completeness','b01001001','counts'],
+            'input_data':d,
+            }# Convert input data from unicode
+    header = { 'content-type': 'application/x-www-form-urlencoded' } # Set header for ocpu
+    endpoint = 'ocpu/library/rlines/R/get_features_data/'
+    print 'About to create ocpu object in %s' % str(datetime.datetime.now() - start)
+    d = ocpu_wrapper(url=endpoint, data=dict_to_r_args(data), header=header)
+    print ' ocpu object created in %s' % str(datetime.datetime.now() - start)
+    d.perform()
+    print 'Main query performed in %s' % str(datetime.datetime.now() - start)
+
+    import pdb; pdb.set_trace()
+    return jsonify(d.get_result_object())
+
+
 
 # TODO: refactor geotag into its own module
 

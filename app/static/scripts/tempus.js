@@ -38,17 +38,18 @@ $(document).ready(function() {
 
         var target = $("#id_target").val();
         var comparison = $("#id_comparison").val();
-        var query_url='http://ec2-54-147-242-201.compute-1.amazonaws.com/ocpu/library/rlines/R/get_features/json/';
-        var postdata = "target.region=\'" + target + "\'"
+        //var query_url='http://ec2-54-147-242-201.compute-1.amazonaws.com/ocpu/library/rlines/R/get_features/json/';
+        var query_url='/get_comparison_upload/';
+        var postdata = {targetRegion:target}
         if (verbose){
             console.log(comparison)
                 console.log(target)
                 console.log('OpenCPU Service URL:' + query_url)
                 console.log('POST data: ' + postdata)
         }
-        d3.json(query_url)
-        .header("Content-Type", "application/x-www-form-urlencoded")
-        .post(postdata, function(error, result) {
+        d3.xhr(query_url)
+        .header("Content-Type", "application/json")
+        .post(JSON.stringify(postdata), function(error, result) {
             console.log(result)
             $('#comparison').parent().removeClass('explanation-hidden').addClass('explanation')
             var comparison_div = $('#comparison')
