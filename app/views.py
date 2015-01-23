@@ -45,10 +45,43 @@ def get_comparison_upload():
     out = d.get_result_object()
 
 
-    #return jsonify(**d.get_result_object())
     return Response(json.dumps(out),  mimetype='application/json')
-    #return jsonify(**d.get_result_object())
+    # Note: jsonify() will not take a list of dicts
+    #return jsonify(d.get_result_object())
 
+
+@app.route('/get_diffindiff_upload/', methods=['POST'])
+def get_diffindiff_upload():
+    """
+    This is currently a toy function which takes a file ID and does the diff-in-diff call here
+    """
+    start = datetime.datetime.now()
+    input_data = json.loads(request.data)
+    with open(os.path.join(APP_ROOT, 'static', 'data', 'counts.csv')) as f:
+        files = {'data': f.read()}
+    endpoint = 'ocpu/library/rlines/R/store_csv/'
+    d = ocpu_wrapper(url=endpoint,  files=files)
+    d.perform()
+    # Load in the counts.csv file
+    data = {
+            'target.region':str(input_data['targetRegion']),
+            'comparison.region.set':[str(i) for i in input_data['comparisonRegionSet']],
+            'event.date':str(input_data['eventDate']),
+            'input_data':d,
+            }# Convert input data from unicode
+    if input_data.has_key('logged'):
+        data['logged'] = input_data['logged']
+    if input_data.has_key('normalize'):
+        data['normalize'] = input_data['normalize']
+    header = { 'content-type': 'application/x-www-form-urlencoded' } # Set header for ocpu
+    endpoint = 'ocpu/library/rlines/R/diffindiff_data/'
+    print('About to create ocpu object in %s' % str(datetime.datetime.now() - start))
+    print(dict_to_r_args(data))
+    d = ocpu_wrapper(url=endpoint, data=dict_to_r_args(data), header=header)
+    print('ocpu object created in %s' % str(datetime.datetime.now() - start))
+    d.perform()
+    print('Main query performed in %s' % str(datetime.datetime.now() - start))
+    return Response(json.dumps(d.get_result_object()),  mimetype='application/json')
 
 
 # TODO: refactor geotag into its own module

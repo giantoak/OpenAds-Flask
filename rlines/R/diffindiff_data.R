@@ -12,7 +12,7 @@
 
 
 
-diffindiff_data<-function(target.region, comparison.region.set, event.date, logged=FALSE, input_data, date.var="MonthDate", group.var="group", var.of.interest="counts", region.var='region'){
+diffindiff_data<-function(target.region, comparison.region.set, event.date, logged=FALSE, normalize=FALSE, input_data, date.var="MonthDate", group.var="group", var.of.interest="counts", region.var='region'){
   post.var<-"post" # Set the variable name for 'post'
   local.date.var<-"date"
   
@@ -26,6 +26,11 @@ diffindiff_data<-function(target.region, comparison.region.set, event.date, logg
   data<-melt(data, id=c(local.date.var,post.var), variable.name=group.var, value.name=var.of.interest)
   if (logged){
     data[var.of.interest]<-log(1+data[var.of.interest])
+  }
+  pre.target.avg<-mean(data[data$post==FALSE & data$group == "Target",'counts'])
+  pre.comparison.avg<-mean(data[data$post==FALSE & data$group == "Comparison",'counts'])
+  if (normalize){
+    data$counts[data$group == "Comparison"] <- data$counts[data$group == "Comparison"] * pre.target.avg/pre.comparison.avg
   }
   data <- within(data, group <- relevel(group, ref = "Comparison")) # Set comparison as base group
   #form1<-as.formula(paste(var.of.interest," ~ ", post.var, "*", group.var))

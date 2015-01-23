@@ -118,14 +118,20 @@ console.log('Checkbox value: ' + uselogs)
 console.log('Normlized toggle value: ' + normalize)
 }
 var postdata = 'start_date="2010-3-3"&end_date="2014-6-25"';
-var query_url='http://ec2-54-147-242-201.compute-1.amazonaws.com/ocpu/library/rlines/R/diffindiff/json/';
+//var query_url='http://ec2-54-147-242-201.compute-1.amazonaws.com/ocpu/library/rlines/R/diffindiff/json/';
+var query_url='/get_diffindiff_upload/';
 var postdata = 'target.region="nova"&comparison.region.set=c("dc","baltimore")&event.date="2014-01-01"';
-var postdata = "target.region=\'" + target + "\'&comparison.region.set=c(\'" + comparison.join('\',\'') + "\')&event.date=\'" + eventdate +"\'"
+var postdata ={
+    targetRegion:target,
+    comparisonRegionSet:comparison,
+    eventDate:eventdate
+};
+//var postdata = "target.region=\'" + target + "\'&comparison.region.set=c(\'" + comparison.join('\',\'') + "\')&event.date=\'" + eventdate +"\'"
 if (uselogs){
-    postdata = postdata + "&logged=TRUE"
+    postdata['logged'] = true
 }
 if (normalize){
-    postdata = postdata + "&normalize=TRUE"
+    postdata['normalize'] = true
 }
 if (verbose){
     console.log('OpenCPU Service URL:' + query_url)
@@ -137,12 +143,13 @@ if (verbose){
     var target_legend = capitalize(target)
     var comparison_legend = 'Comparison (' + comparisons.join(', ')  + ')'
     d3.json(query_url)
-    .header("Content-Type", "application/x-www-form-urlencoded")
-    .post(postdata, function(error, result) {
+    .header("Content-Type", "application/json")
+    .post(JSON.stringify(postdata), function(error, result) {
         if (verbose){
             console.log('Result object from server:')
             console.log(result)
         }
+        //var result = JSON.parse(result_object.response)
 
         var data = [result.target, result.comparison]
     //, function(data) {
