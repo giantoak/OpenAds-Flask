@@ -42,9 +42,12 @@ def get_comparison_upload():
     print ' ocpu object created in %s' % str(datetime.datetime.now() - start)
     d.perform()
     print 'Main query performed in %s' % str(datetime.datetime.now() - start)
+    out = d.get_result_object()
 
-    import pdb; pdb.set_trace()
-    return jsonify(d.get_result_object())
+
+    #return jsonify(**d.get_result_object())
+    return Response(json.dumps(out),  mimetype='application/json')
+    #return jsonify(**d.get_result_object())
 
 
 

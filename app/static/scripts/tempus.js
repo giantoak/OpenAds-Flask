@@ -50,7 +50,8 @@ $(document).ready(function() {
         d3.xhr(query_url)
         .header("Content-Type", "application/json")
         .post(JSON.stringify(postdata), function(error, result) {
-            console.log(result)
+            console.log(result);
+            var data = JSON.parse(result.response);
             $('#comparison').parent().removeClass('explanation-hidden').addClass('explanation')
             var comparison_div = $('#comparison')
             comparison_div.empty()
@@ -67,40 +68,36 @@ $(document).ready(function() {
             // Add a header row
 
             $('<tr/>', {id:'main_row'})
-            .append('<td><b>' + result[0]['region'] + '</b></td>')
-            .append('<td><b>' + result[0]['completeness'] + '</b></td>')
-            .append('<td><b>' + result[0]['b01001001'] + '</b></td>')
-            .append('<td><b>' + result[0]['counts'] + '</b></td>')
+            .append('<td><b>' + data[0]['region'] + '</b></td>')
+            .append('<td><b>' + data[0]['completeness'] + '</b></td>')
+            .append('<td><b>' + data[0]['b01001001'] + '</b></td>')
+            .append('<td><b>' + data[0]['counts'] + '</b></td>')
             .append('<td><b>--</b></td>')
             .appendTo(comparison_table);
             // Add a header row
 
             var column_order = ['region','completeness','b01001001','counts','score']
-                for (var i = 1; i < result.length; i++) { 
+                for (var i = 1; i < data.length; i++) { 
                     // Note: start at row 1, after we do the first row
                     // separately since that's the target
                     var row_data = $('<tr/>')
                     for (var col = 0; col < column_order.length; col++) { 
                         console.log(i)
-                        row_data.append('<td>' + result[i][column_order[col]] + '</td>');
+                        row_data.append('<td>' + data[i][column_order[col]] + '</td>');
                     }
                     row_data.appendTo(comparison_table);
                 }
             comparison_table.appendTo(comparison_div)
 
             $('select[id=id_comparison] >option:selected').removeAttr("selected");
-            for (var i = 1; i < result.length; i++){
+            for (var i = 1; i < data.length; i++){
                 if (verbose){
-                    console.log('region is: ' + result[i]['region'])
-                    console.log('select[id=id_comparison] >option[value=' + result[i]['region'] + ']')
+                    console.log('region is: ' + data[i]['region'])
+                    console.log('select[id=id_comparison] >option[value=' + data[i]['region'] + ']')
                 }
-                $('select[id=id_comparison] >option[value=' + result[i]['region'] + ']').attr('selected','selected')
+                $('select[id=id_comparison] >option[value=' + data[i]['region'] + ']').attr('selected','selected')
             }
             // Remove the selected comparison groups
-            //$('<tr/>')
-            //.append('<td>Diff-in-Diff Effect</td>')
-            //.append('<td>' + result.diff_in_diff.b[0]+ '</td>')
-            //.append('<td>' + result.diff_in_diff.se[0]+ '</td>').appendTo(comparison_table);
         })
     }
     
