@@ -6,3 +6,6 @@ app/upload/*
 flask-env/
 env/
 *.log
+*.Rd
+*.Rproj*
+.Rproj.user

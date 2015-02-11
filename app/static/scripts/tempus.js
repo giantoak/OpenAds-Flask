@@ -49,7 +49,8 @@ $(document).ready(function() {
         }
         d3.xhr(query_url)
         .header("Content-Type", "application/json")
-        .post(JSON.stringify(postdata), function(error, result) {
+        .post(JSON.stringify(postdata), function(error, response) {
+            var result = JSON.parse(response['response'])
             console.log(result)
             $('#comparison').parent().removeClass('explanation-hidden').addClass('explanation')
             var comparison_div = $('#comparison')

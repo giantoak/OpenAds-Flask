@@ -35,7 +35,7 @@ class ocpu_wrapper():
         """
         if not self.result:
             raise(NameError('Search not performed!'))
-        req = requests.get(os.path.join(self.baseurl, '/ocpu/tmp/', self.session_id, '/R/.val/', format))
+        req = requests.get(os.path.join(self.baseurl, 'ocpu','tmp', self.session_id, 'R','.val', format))
         req.raise_for_status()
         return req.json()
     def get_result_pointer(self):

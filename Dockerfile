@@ -26,7 +26,8 @@ RUN apt-get update -y
 # Haven't tested this command
 RUN apt-get install opencpu -y
 RUN apt-get install rstudio-server -y #optional
-RUN service apache2 restart
+
+RUN cd /src; R --no-save < install_r_packages.r
 RUN cd /src; R CMD INSTALL rlines_1.0.tar.gz --library=/usr/lib/opencpu/library/
 RUN service apache2 restart
 
