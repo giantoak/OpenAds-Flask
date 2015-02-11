@@ -66,12 +66,13 @@ press the discard button. No data is deleted from the server.
         <label for="trash">Discarded Places</label>
     </div>
     <div>
-        <select id="trash" size="10">
+        <select id="trash" class="geotag-select" size="10">
         {% for loc, count, loc_id, label in trashed %}
             <option value="{{loc_id}}" 
                 data-name="{{loc}}" 
                 data-count="{{count}}" 
                 data-orig="{{label}}"
+                class="geotag-option"
                 title="{{loc}}: {{count}}">
                 {{loc}}: {{count}}
             </option>

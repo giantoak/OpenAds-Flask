@@ -88,13 +88,13 @@ $(document).ready(function() {
                 }
             comparison_table.appendTo(comparison_div)
 
-            $('select[id=id_comparison] >option:selected').removeAttr("selected");
+            $('select#id_comparison > option:selected').removeAttr("selected");
             for (var i = 1; i < result.length; i++){
                 if (verbose){
                     console.log('region is: ' + result[i]['region'])
-                    console.log('select[id=id_comparison] >option[value=' + result[i]['region'] + ']')
+                    console.log('select#id_comparison > option[value=' + result[i]['region'] + ']')
                 }
-                $('select[id=id_comparison] >option[value=' + result[i]['region'] + ']').attr('selected','selected')
+                $('select#id_comparison >option[value=' + result[i]['region'] + ']').attr('selected','selected')
             }
             // Remove the selected comparison groups
             //$('<tr/>')
@@ -108,60 +108,59 @@ $(document).ready(function() {
     function plot_diff(){
         $("#fake_users2").empty()
 
-var eventdate = $("#diffdate").val();
-var comparison = $("#id_comparison").val();
-var target = $("#id_target").val();
-var uselogs = $('#logged').is(':checked');
-var normalize = $('#normalize').is(':checked');
-if (verbose){
-console.log(eventdate)
-console.log(comparison)
-console.log(target)
-console.log('Checkbox value: ' + uselogs)
-console.log('Normlized toggle value: ' + normalize)
-}
-var postdata = 'start_date="2010-3-3"&end_date="2014-6-25"';
-var query_url='http://ec2-54-147-242-201.compute-1.amazonaws.com/ocpu/library/rlines/R/diffindiff/json/';
-var postdata = 'target.region="nova"&comparison.region.set=c("dc","baltimore")&event.date="2014-01-01"';
-var postdata = "target.region=\'" + target + "\'&comparison.region.set=c(\'" + comparison.join('\',\'') + "\')&event.date=\'" + eventdate +"\'"
-if (uselogs){
-    postdata = postdata + "&logged=TRUE"
-}
-if (normalize){
-    postdata = postdata + "&normalize=TRUE"
-}
-if (verbose){
-    console.log('OpenCPU Service URL:' + query_url)
-    console.log('POST data: ' + postdata)
-}
-    var comparisons = comparison
-    comparisons.forEach(function(d){ capitalize(d)})
-    //Note: this currently isn't working to capitalize comparison locations
-    var target_legend = capitalize(target)
-    var comparison_legend = 'Comparison (' + comparisons.join(', ')  + ')'
-    d3.json(query_url)
-    .header("Content-Type", "application/x-www-form-urlencoded")
-    .post(postdata, function(error, result) {
+        var eventdate = $("#diffdate").val();
+        var comparison = $("#id_comparison").val();
+        var target = $("#id_target").val();
+        var uselogs = $('#logged').is(':checked');
+        var normalize = $('#normalize').is(':checked');
         if (verbose){
-            console.log('Result object from server:')
-            console.log(result)
+            console.log(eventdate)
+            console.log(comparison)
+            console.log(target)
+            console.log('Checkbox value: ' + uselogs)
+            console.log('Normlized toggle value: ' + normalize)
         }
-
-        var data = [result.target, result.comparison]
-    //, function(data) {
-        for(var i=0;i<data.length;i++) {
-            data[i] = convert_dates(data[i], 'date');
+        var postdata = 'start_date="2010-3-3"&end_date="2014-6-25"';
+        var query_url='http://ec2-54-147-242-201.compute-1.amazonaws.com/ocpu/library/rlines/R/diffindiff/json/';
+        var postdata = 'target.region="nova"&comparison.region.set=c("dc","baltimore")&event.date="2014-01-01"';
+        var postdata = "target.region=\'" + target + "\'&comparison.region.set=c(\'" + comparison.join('\',\'') + "\')&event.date=\'" + eventdate +"\'"
+        if (uselogs){
+            postdata = postdata + "&logged=TRUE"
         }
-
-        var alldata = result.data
-        alldata = convert_dates(alldata, 'date')
+        if (normalize){
+            postdata = postdata + "&normalize=TRUE"
+        }
         if (verbose){
-            console.log('Converted data to plot:')
-            console.log(alldata)
+            console.log('OpenCPU Service URL:' + query_url)
+            console.log('POST data: ' + postdata)
         }
+        var comparisons = comparison
+        comparisons.forEach(function(d){ capitalize(d)})
+        //Note: this currently isn't working to capitalize comparison locations
+        var target_legend = capitalize(target)
+        var comparison_legend = 'Comparison (' + comparisons.join(', ')  + ')'
+        d3.json(query_url)
+        .header("Content-Type", "application/x-www-form-urlencoded")
+        .post(postdata, function(error, result) {
+            if (verbose){
+                console.log('Result object from server:')
+                console.log(result)
+            }
 
-        ////add a multi-line chart
-        //data_graphic({
+            var data = [result.target, result.comparison]
+            for(var i=0;i<data.length;i++) {
+                data[i] = convert_dates(data[i], 'date');
+            }
+
+            var alldata = result.data
+            alldata = convert_dates(alldata, 'date')
+            if (verbose){
+                console.log('Converted data to plot:')
+                console.log(alldata)
+            }
+
+            ////add a multi-line chart
+            //data_graphic({
             //title:"Multi-Line Chart",
             //description: "This line chart contains multiple lines.",
             //data: data,
@@ -172,88 +171,88 @@ if (verbose){
             //target: '#fake_users2',
             //x_accessor: 'date',
             //y_accessor: 'counts'
-        //});
-        var markers = [{
-            'date': new Date(eventdate),
-            'label': 'Event Date'
-        }];
-        if (verbose){
-            console.log('Markers to print on graph:')
-            console.log(markers)
-        }
+            //});
+            var markers = [{
+                'date': new Date(eventdate),
+                'label': 'Event Date'
+            }];
+            if (verbose){
+                console.log('Markers to print on graph:')
+                console.log(markers)
+            }
 
-        data_graphic({
-            title:"Difference in Differences Plot",
-            //description: "How do you handle data with multiple implied time series lengths?",
-            data: alldata,
-            legend: [comparison_legend, target_legend],
-            legend_target: '#jeff_legend',
-            width: torso.width*2,
-            height: torso.height,
-            interpolate: 'linear',
-            right: torso.right,
-            target: '#fake_users2',
-            //linked: true,
-            markers: markers,
-            y_extended_ticks: true,
-            x_accessor: 'date',
-            y_accessor: ['Comparison', 'Target'],
+            data_graphic({
+                title:"Difference in Differences Plot",
+                //description: "How do you handle data with multiple implied time series lengths?",
+                data: alldata,
+                legend: [comparison_legend, target_legend],
+                legend_target: '#jeff_legend',
+                width: torso.width*2,
+                height: torso.height,
+                interpolate: 'linear',
+                right: torso.right,
+                target: '#fake_users2',
+                //linked: true,
+                markers: markers,
+                y_extended_ticks: true,
+                x_accessor: 'date',
+                y_accessor: ['Comparison', 'Target'],
+            });
+
+            // Begin printing dd results
+            //
+            var dd_table = $('<table/>', {id:'dd_table', class:'table table-striped'});
+            console.log(dd_table)
+            $('<tr/>', {id:'header_row'})
+            .append('<td><b>Estimate</b></td>')
+            .append('<td><b>Value</b></td>')
+            .append('<td><b>Standard Error</b></td>')
+            .append('<td><b>Statistically Significant?</b></td>')
+            .appendTo(dd_table);
+            // Add a header row
+
+            var temp_significance = ''
+            if (result.diff_in_diff.p[0] < .025){
+                temp_significance = "Yes"
+            }
+            else{
+                temp_significance = "No"
+            }
+            $('<tr/>')
+            .append('<td>Diff-in-Diff Effect</td>')
+            .append('<td>' + result.diff_in_diff.b[0]+ '</td>')
+            .append('<td>' + result.diff_in_diff.se[0]+ '</td>')
+            .append('<td>' + temp_significance + '</td>')
+            .appendTo(dd_table);
+
+            var temp_significance = ''
+            if (result.target_diff.p[0] < .025){
+                temp_significance = "Yes"
+            }
+            else{
+                temp_significance = "No"
+            }
+            $('<tr/>')
+            .append('<td>Target Difference</td>')
+            .append('<td>' + result.target_diff.b[0]+ '</td>')
+            .append('<td>' + result.target_diff.se[0]+ '</td>')
+            .append('<td>' + temp_significance + '</td>').appendTo(dd_table);
+
+            $('<tr/>')
+            .append('<td>Comparison Difference</td>')
+            .append('<td>' + result.comparison_diff.b[0]+ '</td>')
+            .append('<td>' + result.comparison_diff.se[0]+ '</td>')
+            .append('<td>' + temp_significance + '</td>')
+            .appendTo(dd_table);
+
+            var dd_results = $('#dd_results')
+            dd_results.empty()
+            $('#dd_results').append(dd_table)
+            //dd_table.appendTo($('#dd_results'))
+
+            $(".dd_text").removeClass('explanation-hidden').addClass('explanation')
+
         });
-
-        // Begin printing dd results
-        //
-        var dd_table = $('<table/>', {id:'dd_table', class:'table table-striped'});
-        console.log(dd_table)
-        $('<tr/>', {id:'header_row'})
-        .append('<td><b>Estimate</b></td>')
-        .append('<td><b>Value</b></td>')
-        .append('<td><b>Standard Error</b></td>')
-        .append('<td><b>Statistically Significant?</b></td>')
-        .appendTo(dd_table);
-        // Add a header row
-
-        var temp_significance = ''
-        if (result.diff_in_diff.p[0] < .025){
-            temp_significance = "Yes"
-        }
-        else{
-            temp_significance = "No"
-        }
-        $('<tr/>')
-        .append('<td>Diff-in-Diff Effect</td>')
-        .append('<td>' + result.diff_in_diff.b[0]+ '</td>')
-        .append('<td>' + result.diff_in_diff.se[0]+ '</td>')
-        .append('<td>' + temp_significance + '</td>')
-        .appendTo(dd_table);
-
-        var temp_significance = ''
-        if (result.target_diff.p[0] < .025){
-            temp_significance = "Yes"
-        }
-        else{
-            temp_significance = "No"
-        }
-        $('<tr/>')
-        .append('<td>Target Difference</td>')
-        .append('<td>' + result.target_diff.b[0]+ '</td>')
-        .append('<td>' + result.target_diff.se[0]+ '</td>')
-        .append('<td>' + temp_significance + '</td>').appendTo(dd_table);
-
-        $('<tr/>')
-        .append('<td>Comparison Difference</td>')
-        .append('<td>' + result.comparison_diff.b[0]+ '</td>')
-        .append('<td>' + result.comparison_diff.se[0]+ '</td>')
-        .append('<td>' + temp_significance + '</td>')
-        .appendTo(dd_table);
-
-        var dd_results = $('#dd_results')
-        dd_results.empty()
-        $('#dd_results').append(dd_table)
-        //dd_table.appendTo($('#dd_results'))
-
-        $(".dd_text").removeClass('explanation-hidden').addClass('explanation')
-
-    });
     };
 
 
@@ -269,13 +268,13 @@ if (verbose){
         })
         $('#dark-css').click(function () {
             $('.missing')
-                .css('background-image', 'url(images/missing-data-dark.png)');
+            .css('background-image', 'url(images/missing-data-dark.png)');
 
             $('.wip')
-                .css('background-color', '#3b3b3b');
+            .css('background-color', '#3b3b3b');
 
             $('.trunk-section')
-                .css('border-top-color', '#5e5e5e');
+            .css('border-top-color', '#5e5e5e');
 
             $('.pill').removeClass('active');
             $(this).toggleClass('active');
@@ -289,13 +288,13 @@ if (verbose){
 
         $('#light-css').click(function () {
             $('.missing')
-                .css('background-image', 'url(images/missing-data.png)');
+            .css('background-image', 'url(images/missing-data.png)');
 
             $('.wip')
-                .css('background-color', '#f1f1f1');
+            .css('background-color', '#f1f1f1');
 
             $('.trunk-section')
-                .css('border-top-color', '#ccc');
+            .css('border-top-color', '#ccc');
 
             $('.pill').removeClass('active');
             $(this).toggleClass('active');
@@ -312,8 +311,8 @@ if (verbose){
 
             //change button state
             $(this).addClass('active')
-                .siblings()
-                .removeClass('active');
+            .siblings()
+            .removeClass('active');
 
             //update data    
             data_graphic({
@@ -334,8 +333,8 @@ if (verbose){
 
             //change button state
             $(this).addClass('active')
-                .siblings()
-                .removeClass('active');
+            .siblings()
+            .removeClass('active');
 
             //update data    
             data_graphic({
@@ -352,24 +351,24 @@ if (verbose){
             })
         })
     }
-    
+
     document.body.addEventListener('mouseover', function(e) {
-  var target = e.target, item;
-  
-  var upfrontRemover = function() {
-    item.classList.remove('item--upfront');
-    item.removeEventListener('transitionend', upfrontRemover, false);
-  };
-  
-  if(target.classList.contains('hexagon__content')) {
-    item = target.parentNode.parentNode.parentNode;
-        item.addEventListener('transitionend', upfrontRemover, false);
-    
-    if(!item.classList.contains('item--upfront')) {
-      item.classList.add('item--upfront');
-    }
-  }
-}, false);
+        var target = e.target, item;
+
+        var upfrontRemover = function() {
+            item.classList.remove('item--upfront');
+            item.removeEventListener('transitionend', upfrontRemover, false);
+        };
+
+        if(target.classList.contains('hexagon__content')) {
+            item = target.parentNode.parentNode.parentNode;
+            item.addEventListener('transitionend', upfrontRemover, false);
+
+            if(!item.classList.contains('item--upfront')) {
+                item.classList.add('item--upfront');
+            }
+        }
+    }, false);
 
 
     //replace all SVG images with inline SVG
@@ -401,6 +400,6 @@ if (verbose){
             $img.replaceWith($svg);
 
         }, 'xml');
-    })
-plot_diff()
-})
+    });
+    plot_diff();
+});

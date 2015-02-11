@@ -17,10 +17,10 @@ $(document).ready(function() {
     // hide the autocomplete field on load
     $('#response').hide()
 
-    $('select .geotag-select').change(function() {
+    $('select.geotag-select').change(function() {
             // Save option as selected
-            var option = $(this).find('option.geotag-option:selected');
-
+            var option = $('option.geotag-option:selected', this);
+            
             selectPlace(option.attr('value'));
 
     });
@@ -29,7 +29,7 @@ $(document).ready(function() {
     datumTokenizer: function (data) {
         return data.value['results'];
     },
-    
+
     queryTokenizer: Bloodhound.tokenizers.whitespace,
     sorter: function (a, b) {
 
@@ -105,7 +105,7 @@ attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</
         
         tagged_select.append($('<option/>').attr({
                 'value': d[1]['id'],
-                'class': c + 'geotag-option',
+                'class': c + ' ' + 'geotag-option',
                 'title': d[0] + ': ' + d[1]['ratio']
                 }).data({
                 'name': d[0],
@@ -137,9 +137,9 @@ attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</
 
     /* Select a place from the options and deselect all others */
     function selectPlace(id) {
-        $('option .geotag-option').prop('selected', false);
+        $('option.geotag-option').prop('selected', false);
         console.log('selected ' + id);
-        var option = $('option[value="' + id + '"][class="geotag-option"]').prop('selected', true),
+        var option = $('option.geotag-option[value="' + id + '"]').prop('selected', true),
             option_data = option.data();
         
         $('#remote .typeahead')
